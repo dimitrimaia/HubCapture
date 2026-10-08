@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Space_Grotesk } from 'next/font/google'
+import { SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -13,10 +14,46 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 })
 
+const title = 'Hub Data: ganhe dinheiro gravando vídeos com o celular | Código VEMHUB'
+const description =
+  'Ganhe até R$ 50/h gravando tarefas em casa ou no trabalho com o celular. Cadastro grátis na Hub com o código oficial VEMHUB, Starter Kit grátis e saque via PIX.'
+
 export const metadata: Metadata = {
-  title: 'Hub — Ganhe por hora gravando tarefas para treinar IA',
-  description:
-    'Grave tarefas do mundo real com o celular, gere dados estruturados para inteligência artificial e receba por cada hora aprovada. Cadastro gratuito.',
+  metadataBase: new URL(SITE_URL),
+  title,
+  description,
+  applicationName: 'Hub Data',
+  keywords: [
+    'hub',
+    'hub data',
+    'hubdata',
+    'hub ia',
+    'código VEMHUB',
+    'ganhar dinheiro gravando vídeos',
+    'ganhar dinheiro com o celular',
+    'renda extra em casa',
+    'trabalho em casa',
+    'treinar inteligência artificial',
+    'app Minute',
+    'starter kit hub',
+  ],
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    url: '/',
+    siteName: 'Hub Data',
+    title,
+    description,
+    images: [{ url: '/images/hero-recording.png', alt: 'Pessoa gravando tarefa com celular na faixa de cabeça' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+    images: ['/images/hero-recording.png'],
+  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
   generator: 'v0.app',
   icons: {
     icon: [

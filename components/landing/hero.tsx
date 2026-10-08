@@ -1,8 +1,10 @@
 import Image from 'next/image'
 import { BadgeCheck, CircleDot } from 'lucide-react'
+import { CopyCodeButton } from './copy-code-button'
 import { CtaLink } from './cta-link'
+import { ModeSwitch } from './mode-context'
 
-const highlights = ['Cadastro gratuito', 'Starter Kit sem custo', 'Pagamento via PIX']
+const highlights = ['Cadastro gratuito', 'Starter Kit grátis', 'Saque via PIX']
 
 export function Hero() {
   return (
@@ -15,21 +17,27 @@ export function Hero() {
         <div className="relative flex flex-col gap-7 p-6 sm:p-10 md:p-12 lg:p-14">
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em] text-primary">
             <CircleDot className="size-3 animate-pulse" aria-hidden="true" />
-            Vagas abertas no Brasil
+            <ModeSwitch trabalho="Modo trabalho · Comercial" casa="Modo casa · Residencial" />
           </span>
 
           <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            Filmou, <span className="text-primary">ganhou.</span> Renda extra por hora gravando o seu dia.
+            Filmou, <span className="text-primary">ganhou.</span>{' '}
+            <span className="block text-3xl sm:text-4xl lg:text-5xl">
+              Ganhe dinheiro gravando vídeos com o celular.
+            </span>
           </h1>
 
           <p className="max-w-lg text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Prenda o celular na cabeça e grave tarefas reais em primeira pessoa — em casa ou no trabalho. Esses vídeos
-            treinam robôs e inteligência artificial, e você recebe por cada hora aprovada.
+            <ModeSwitch
+              trabalho="Na Hub Data você grava atividades profissionais reais no seu trabalho, com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX."
+              casa="Na Hub Data você grava tarefas do dia a dia em casa — cozinhar, organizar, lavar — com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX."
+            />
           </p>
 
           <div className="flex items-end gap-3">
             <p className="whitespace-nowrap text-5xl font-semibold tracking-tight text-primary sm:text-6xl">
-              R$ 50<span className="text-2xl text-primary/70 sm:text-3xl">/h</span>
+              <ModeSwitch trabalho="R$ 50" casa="R$ 35" />
+              <span className="text-2xl text-primary/70 sm:text-3xl">/h</span>
             </p>
             <p className="pb-2 text-sm leading-snug text-muted-foreground">
               até, por hora
@@ -40,14 +48,19 @@ export function Hero() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <CtaLink size="lg" withArrow>
-              Começar a Gravar Agora
+              Cadastrar com VEMHUB
             </CtaLink>
             <a
-              href="#como-funciona"
+              href="#tutorial"
               className="inline-flex h-13 items-center justify-center rounded-full px-5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Ver como funciona
+              Ver tutorial completo
             </a>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+            <span>Código oficial:</span>
+            <CopyCodeButton size="sm" />
           </div>
 
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
@@ -61,13 +74,26 @@ export function Hero() {
         </div>
 
         <div className="relative min-h-[22rem] md:min-h-full">
-          <Image
-            src="/images/hero-recording.png"
-            alt="Profissional com celular preso na faixa de cabeça gravando o próprio trabalho"
-            fill
-            priority
-            sizes="(min-width: 768px) 50vw, 100vw"
-            className="object-cover object-top"
+          <ModeSwitch
+            trabalho={
+              <Image
+                src="/images/hero-recording.png"
+                alt="Profissional com celular preso na faixa de cabeça gravando o próprio trabalho para a Hub Data"
+                fill
+                priority
+                sizes="(min-width: 768px) 50vw, 100vw"
+                className="object-cover object-top"
+              />
+            }
+            casa={
+              <Image
+                src="/images/hero-home.png"
+                alt="Mulher com celular preso na faixa de cabeça gravando tarefa na cozinha de casa para a Hub Data"
+                fill
+                sizes="(min-width: 768px) 50vw, 100vw"
+                className="object-cover object-top"
+              />
+            }
           />
           <div
             aria-hidden="true"
@@ -80,7 +106,9 @@ export function Hero() {
             </span>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Gravando</p>
-              <p className="text-sm font-medium">Manutenção predial · 00:42:18</p>
+              <p className="text-sm font-medium">
+                <ModeSwitch trabalho="Manutenção predial · 00:42:18" casa="Preparar refeição · 00:31:05" />
+              </p>
             </div>
           </div>
         </div>
