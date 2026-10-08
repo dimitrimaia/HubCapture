@@ -55,6 +55,32 @@
   --input: oklch(1 0 0 / 12%);
   --ring: oklch(0.8 0.2 152 / 60%);
   --radius: 0.75rem;
+  --glass: oklch(0.2 0.018 165 / 55%);
+  --grid-line: oklch(1 0 0 / 3.5%);
+}
+
+[data-mode='casa'] {
+  color-scheme: light;
+  --background: oklch(0.985 0.004 160);
+  --foreground: oklch(0.2 0.02 165);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.02 165);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.02 165);
+  --primary: oklch(0.64 0.17 152);
+  --primary-foreground: oklch(0.99 0.01 160);
+  --secondary: oklch(0.95 0.008 160);
+  --secondary-foreground: oklch(0.2 0.02 165);
+  --muted: oklch(0.95 0.008 160);
+  --muted-foreground: oklch(0.46 0.02 165);
+  --accent: oklch(0.94 0.03 155);
+  --accent-foreground: oklch(0.2 0.02 165);
+  --destructive: oklch(0.58 0.21 25);
+  --border: oklch(0 0 0 / 9%);
+  --input: oklch(0 0 0 / 12%);
+  --ring: oklch(0.64 0.17 152 / 50%);
+  --glass: oklch(1 0 0 / 75%);
+  --grid-line: oklch(0 0 0 / 4%);
 }
 
 @layer base {
@@ -70,22 +96,22 @@
 }
 
 @utility glass {
-  background-color: oklch(0.2 0.018 165 / 55%);
-  border: 1px solid oklch(1 0 0 / 8%);
+  background-color: var(--glass);
+  border: 1px solid var(--border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 @utility bg-grid {
   background-image:
-    linear-gradient(oklch(1 0 0 / 3.5%) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(1 0 0 / 3.5%) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 @utility glow {
   box-shadow:
-    0 0 0 1px oklch(0.8 0.2 152 / 40%),
-    0 0 32px -4px oklch(0.8 0.2 152 / 65%),
-    0 10px 40px -10px oklch(0.8 0.2 152 / 70%);
+    0 0 0 1px color-mix(in oklch, var(--primary) 40%, transparent),
+    0 0 32px -4px color-mix(in oklch, var(--primary) 55%, transparent),
+    0 10px 40px -10px color-mix(in oklch, var(--primary) 60%, transparent);
 }

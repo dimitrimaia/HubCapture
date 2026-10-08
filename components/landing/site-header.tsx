@@ -2,14 +2,16 @@ import { CtaLink } from './cta-link'
 import { Logo } from './logo'
 
 const navItems = [
-  { href: '#diferenca', label: 'Por que é diferente' },
   { href: '#como-funciona', label: 'Como funciona' },
+  { href: '#codigo-vemhub', label: 'Código VEMHUB' },
+  { href: '#tutorial', label: 'Tutorial' },
   { href: '#modos', label: 'Ganhos' },
+  { href: '#faq', label: 'FAQ' },
 ]
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-background/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <a href="#topo" aria-label="Hub — início">
           <Logo />
@@ -20,7 +22,7 @@ export function SiteHeader() {
               <li key={item.href}>
                 <a
                   href={item.href}
-                  className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-white/[0.05] hover:text-foreground"
+                  className="rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
                 >
                   {item.label}
                 </a>

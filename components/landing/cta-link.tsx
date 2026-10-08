@@ -13,7 +13,7 @@ type CtaLinkProps = {
 
 const variants = {
   primary: 'bg-primary text-primary-foreground glow hover:brightness-110',
-  outline: 'border border-white/12 bg-white/[0.03] text-foreground hover:bg-white/[0.07]',
+  outline: 'border border-foreground/12 bg-foreground/[0.03] text-foreground hover:bg-foreground/[0.07]',
   dark: 'bg-background text-foreground hover:bg-background/85',
 }
 
