@@ -29,8 +29,8 @@ export function Hero() {
 
           <p className="max-w-lg text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
             <ModeSwitch
-              trabalho="Na Hub Data você grava atividades profissionais reais no seu trabalho, com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX."
-              casa="Na Hub Data você grava tarefas do dia a dia em casa — cozinhar, organizar, lavar — com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX."
+              trabalho="No app Hub Capture, da Hub Data, você grava atividades profissionais reais no seu trabalho, com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX."
+              casa="No app Hub Capture, da Hub Data, você grava tarefas do dia a dia em casa — cozinhar, organizar, lavar — com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX."
             />
           </p>
 

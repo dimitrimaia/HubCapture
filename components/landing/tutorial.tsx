@@ -1,9 +1,12 @@
 import Image from 'next/image'
+import Link from 'next/link'
 import { Check, Lightbulb, RotateCcw, Smartphone, Sun, Volume2, X } from 'lucide-react'
 import { CopyCodeButton } from './copy-code-button'
 import { CtaLink } from './cta-link'
 import { Eyebrow } from './eyebrow'
+import { StoreBadges } from './store-badges'
 import { ModeSwitch } from './mode-context'
+import { TUTORIAIS_PATH } from '@/lib/site'
 
 const setupTips = [
   { icon: Sun, label: 'Boa iluminação, uniforme' },
@@ -33,7 +36,7 @@ export function Tutorial() {
         <div className="max-w-2xl">
           <Eyebrow>Tutorial completo</Eyebrow>
           <h2 id="tutorial-title" className="mt-4 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-            Como começar na Hub Data: do cadastro ao primeiro PIX
+            Como começar no Hub Capture: do cadastro ao primeiro PIX
           </h2>
           <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
             Siga estes 5 passos na ordem. Quem segue o tutorial tem muito mais gravações aprovadas logo na primeira
@@ -79,11 +82,12 @@ export function Tutorial() {
             </div>
           </TutorialStep>
 
-          <TutorialStep number={3} title="Baixe o app Minute e entre na organização certa">
+          <TutorialStep number={3} title="Baixe o app Hub Capture e escolha o modo certo">
             <p>
-              O Minute é o app onde você grava e envia as tarefas. Baixe na App Store ou no Google Play e entre com o
-              mesmo e-mail da sua conta Hub. Depois, em <strong className="text-foreground">Configurações → Organization</strong>, escolha:
+              O Hub Capture é o app onde você grava e envia as tarefas. Baixe na App Store ou no Google Play e entre com
+              o mesmo e-mail da sua conta Hub. Depois, em <strong className="text-foreground">Configurações → Organization</strong>, escolha:
             </p>
+            <StoreBadges className="mt-4" />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-border bg-background/50 p-4">
                 <p className="font-semibold text-foreground">Residencial = Casa</p>
@@ -132,10 +136,16 @@ export function Tutorial() {
           </TutorialStep>
         </ol>
 
-        <div className="mt-10 flex justify-center">
+        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <CtaLink size="lg" withArrow>
             Começar agora com VEMHUB
           </CtaLink>
+          <Link
+            href={TUTORIAIS_PATH}
+            className="inline-flex h-13 items-center justify-center rounded-full px-5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Ver tutoriais em vídeo
+          </Link>
         </div>
       </div>
     </section>

@@ -1,13 +1,15 @@
 import { ArrowRight } from 'lucide-react'
+import Link from 'next/link'
+import { CADASTRO_PATH, SIGNUP_URL } from '@/lib/site'
 import { cn } from '@/lib/utils'
-
-export const SIGNUP_URL = 'https://ai.hub.xyz/r/VEMHUB'
 
 type CtaLinkProps = {
   children: React.ReactNode
   variant?: 'primary' | 'outline' | 'dark'
   size?: 'sm' | 'md' | 'lg'
   withArrow?: boolean
+  /** Abre o link de indicação direto em nova aba, em vez da página /cadastro com o iframe. */
+  external?: boolean
   className?: string
 }
 
@@ -28,24 +30,43 @@ export function CtaLink({
   variant = 'primary',
   size = 'md',
   withArrow = false,
+  external = false,
   className,
 }: CtaLinkProps) {
-  return (
-    <a
-      href={SIGNUP_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        'group inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all outline-none focus-visible:ring-3 focus-visible:ring-ring',
-        variants[variant],
-        sizes[size],
-        className,
-      )}
-    >
+  const classes = ctaClasses({ variant, size, className })
+  const content = (
+    <>
       {children}
       {withArrow && (
         <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
       )}
-    </a>
+    </>
+  )
+
+  if (external) {
+    return (
+      <a href={SIGNUP_URL} target="_blank" rel="noopener noreferrer" className={classes}>
+        {content}
+      </a>
+    )
+  }
+
+  return (
+    <Link href={CADASTRO_PATH} className={classes}>
+      {content}
+    </Link>
+  )
+}
+
+export function ctaClasses({
+  variant = 'primary',
+  size = 'md',
+  className,
+}: Pick<CtaLinkProps, 'variant' | 'size' | 'className'>) {
+  return cn(
+    'group inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all outline-none focus-visible:ring-3 focus-visible:ring-ring',
+    variants[variant],
+    sizes[size],
+    className,
   )
 }

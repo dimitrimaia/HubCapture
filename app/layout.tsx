@@ -1,7 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Space_Grotesk } from 'next/font/google'
-import { SITE_URL } from '@/lib/site'
+import { APP_STORE_ID, APP_STORE_URL, PLAY_STORE_URL, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -14,27 +14,30 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 })
 
-const title = 'Hub Data: ganhe dinheiro gravando vídeos com o celular | Código VEMHUB'
+const title = 'Hub Capture: ganhe dinheiro gravando vídeos com o celular | Hub App e Hub Data — Código VEMHUB'
 const description =
-  'Ganhe até R$ 50/h gravando tarefas em casa ou no trabalho com o celular. Cadastro grátis na Hub com o código oficial VEMHUB, Starter Kit grátis e saque via PIX.'
+  'Hub Capture é o app da Hub Data que paga até R$ 50/h para você gravar tarefas em casa ou no trabalho com o celular. Baixe o Hub App, cadastre-se grátis com o código VEMHUB e saque via PIX.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title,
+  title: { default: title, template: '%s | Hub Capture' },
   description,
-  applicationName: 'Hub Data',
+  applicationName: 'Hub Capture',
   keywords: [
-    'hub',
+    'hub capture',
+    'hubcapture',
+    'hub app',
+    'app hub',
     'hub data',
     'hubdata',
-    'hub ia',
+    'hub capture app',
+    'hub capture download',
     'código VEMHUB',
+    'boné hubcap',
     'ganhar dinheiro gravando vídeos',
     'ganhar dinheiro com o celular',
     'renda extra em casa',
-    'trabalho em casa',
     'treinar inteligência artificial',
-    'app Minute',
     'starter kit hub',
   ],
   alternates: { canonical: '/' },
@@ -42,27 +45,22 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'pt_BR',
     url: '/',
-    siteName: 'Hub Data',
+    siteName: 'Hub Capture',
     title,
     description,
-    images: [{ url: '/images/hero-recording.png', alt: 'Pessoa gravando tarefa com celular na faixa de cabeça' }],
   },
   twitter: {
     card: 'summary_large_image',
     title,
     description,
-    images: ['/images/hero-recording.png'],
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
-  generator: 'v0.app',
-  icons: {
-    icon: [
-      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
-      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
-    ],
-    apple: '/apple-icon.png',
+  itunes: { appId: APP_STORE_ID },
+  appLinks: {
+    ios: { url: APP_STORE_URL, app_store_id: APP_STORE_ID, app_name: 'Hub Capture' },
+    android: { package: 'xyz.hub.mobile', url: PLAY_STORE_URL, app_name: 'Hub Capture' },
   },
+  other: { 'google-play-app': 'app-id=xyz.hub.mobile' },
 }
 
 export const viewport: Viewport = {
