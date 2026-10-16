@@ -2,10 +2,11 @@ export function SeoArticle() {
   return (
     <section aria-labelledby="sobre-hub-title" className="px-4 py-16 sm:px-6 md:py-20">
       <article className="mx-auto flex max-w-3xl flex-col gap-5 leading-relaxed text-muted-foreground [&_h2]:text-balance [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-foreground [&_h3]:mt-6 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-foreground [&_strong]:text-foreground">
-        <h2 id="sobre-hub-title">Hub Data: a plataforma que paga para você gravar vídeos com o celular</h2>
+        <h2 id="sobre-hub-title">Hub Capture, Hub App e Hub Data: a plataforma que paga para você gravar vídeos com o celular</h2>
         <p>
           A <strong>Hub</strong> — também chamada de <strong>Hub Data</strong> ou <strong>HubData</strong> — é uma
-          empresa de inteligência artificial que paga pessoas comuns para gravar tarefas reais em primeira pessoa.
+          empresa de inteligência artificial, e o <strong>Hub Capture</strong> (o <strong>Hub App</strong>) é o
+          aplicativo oficial dela, uma plataforma que paga pessoas comuns para gravar tarefas reais em primeira pessoa.
           Você prende o celular em uma faixa de cabeça, faz uma atividade do começo ao fim e recebe{' '}
           <strong>até R$ 35 por hora aprovada em casa</strong> ou <strong>até R$ 50 por hora no trabalho</strong>, com
           saque via PIX.
@@ -35,7 +36,7 @@ export function SeoArticle() {
         <h3>Como se cadastrar com o código VEMHUB</h3>
         <p>
           O cadastro é gratuito. Use o <strong>código de convite oficial VEMHUB</strong> para criar sua conta, receber o
-          Starter Kit grátis e participar dos sorteios exclusivos. Depois é só baixar o app Minute, escolher a
+          Starter Kit grátis e participar dos sorteios exclusivos. Depois é só baixar o app Hub Capture, escolher a
           organização Residencial ou Comercial e começar a gravar.
         </p>
 

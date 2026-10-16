@@ -1,5 +1,16 @@
 export const REFERRAL_CODE = 'VEMHUB'
 
+export const SIGNUP_URL = 'https://ai.hub.xyz/r/VEMHUB'
+export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=xyz.hub.mobile&hl=pt_BR'
+export const APP_STORE_URL = 'https://apps.apple.com/br/app/hub-capture/id6772285040'
+export const APP_STORE_ID = '6772285040'
+export const INSTAGRAM_URL = 'https://instagram.com/hubcapture'
+export const HUBCAP_URL = 'https://www.mercadolivre.com.br/up/MLBU5339859880'
+export const HUBCAP_IMAGE_URL = 'https://http2.mlstatic.com/D_NQ_NP_2X_974149-MLA117444981018_102026-F-bone-hubcap.webp'
+
+export const CADASTRO_PATH = '/cadastro'
+export const TUTORIAIS_PATH = '/tutoriais'
+
 export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
   ? process.env.NEXT_PUBLIC_SITE_URL
   : process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -7,6 +18,16 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
     : 'http://localhost:3000'
 
 export const faqs = [
+  {
+    question: 'O que é o Hub Capture?',
+    answer:
+      'Hub Capture é o app oficial da Hub (Hub Data) para gravar tarefas em primeira pessoa com o celular e ganhar por hora aprovada. Também é chamado de Hub App. Você instala o app, grava a tarefa com o celular preso na cabeça e acompanha os pagamentos pelo painel.',
+  },
+  {
+    question: 'Onde baixar o app Hub Capture?',
+    answer:
+      'O Hub Capture (Hub App) é gratuito no Google Play para Android e na App Store para iPhone. Os links oficiais de download estão no menu e no rodapé deste site.',
+  },
   {
     question: 'O que é a Hub Data?',
     answer:
@@ -30,7 +51,7 @@ export const faqs = [
   {
     question: 'Preciso pagar alguma coisa para participar?',
     answer:
-      'Não. O cadastro é gratuito e o Starter Kit (faixa de cabeça e suporte para celular) é enviado sem custo. Você não precisa indicar amigos, assistir anúncios nem comprar nada para receber.',
+      'Não. O cadastro é gratuito e o Starter Kit (faixa de cabeça e suporte para celular) é enviado sem custo. Se não quiser esperar o kit, o boné HubCap é opcional. Você não precisa indicar amigos, assistir anúncios nem comprar nada para receber.',
   },
   {
     question: 'Preciso aparecer nos vídeos ou ter seguidores?',
@@ -40,7 +61,7 @@ export const faqs = [
   {
     question: 'Qual celular preciso para gravar?',
     answer:
-      'Um smartphone Android ou iPhone com câmera traseira em bom estado, espaço livre de armazenamento e bateria carregada. Você grava pelo app Minute, disponível na App Store e no Google Play.',
+      'Um smartphone Android ou iPhone com câmera traseira em bom estado, espaço livre de armazenamento e bateria carregada. Você grava pelo app Hub Capture, disponível na App Store e no Google Play.',
   },
   {
     question: 'Posso gravar no meu trabalho?',
