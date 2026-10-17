@@ -1,4 +1,5 @@
 import { normalizeColabLead, validateColabLead } from '@/lib/colab'
+import { forwardLead } from '@/lib/webhook'
 
 export async function POST(request: Request) {
   let body: Record<string, unknown>
@@ -19,28 +20,8 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, errors }, { status: 400 })
   }
 
-  const payload = { ...lead, origem: 'hubcapture.app', criadoEm: new Date().toISOString() }
-  const webhookUrl = process.env.COLAB_WEBHOOK_URL
-
-  if (!webhookUrl) {
-    console.info('[colab] COLAB_WEBHOOK_URL não configurada; lead recebido:', payload)
-    return Response.json({ ok: true })
-  }
-
-  try {
-    // Google Apps Script responde com redirect 302 e não aceita preflight; text/plain evita ambos os problemas.
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-      redirect: 'follow',
-      cache: 'no-store',
-    })
-    if (!response.ok) throw new Error(`Webhook respondeu ${response.status}`)
-  } catch (error) {
-    console.error('[colab] Falha ao enviar lead para o webhook:', error)
+  if (!(await forwardLead('colab', lead))) {
     return Response.json({ ok: false, error: 'Não foi possível enviar agora. Tente novamente.' }, { status: 502 })
   }
-
   return Response.json({ ok: true })
 }

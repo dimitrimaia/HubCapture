@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { sectionLinks } from '@/lib/navigation'
-import { CADASTRO_PATH, HUBCAP_URL, INSTAGRAM_URL, SIGNUP_URL, TUTORIAIS_PATH } from '@/lib/site'
+import { CADASTRO_PATH, HUBCAP_URL, INSTAGRAM_URL, PARTNER_TAGLINE, SIGNUP_URL, TUTORIAIS_PATH, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
 import { ColabButton } from './colab-dialog'
 import { CtaLink } from './cta-link'
 import { InstagramIcon } from './instagram-icon'
 import { Logo } from './logo'
 import { StoreBadges } from './store-badges'
+import { WhatsappIcon } from './whatsapp-icon'
 
 const linkClass = 'text-sm text-muted-foreground transition-colors hover:text-foreground'
 
@@ -15,7 +16,7 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-6xl flex-col gap-10">
         <div className="grid gap-10 md:grid-cols-[1.3fr_1fr_1fr]">
           <div className="flex flex-col gap-4">
-            <Logo />
+            <Logo tagline={PARTNER_TAGLINE} />
             <p className="max-w-xs text-sm text-muted-foreground">
               Hub Capture: grave tarefas do mundo real com o celular no app Hub e ganhe por hora aprovada.
             </p>
@@ -39,6 +40,10 @@ export function SiteFooter() {
 
           <div className="flex flex-col items-start gap-3">
             <p className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-primary">Comunidade</p>
+            <a href={WHATSAPP_COMMUNITY_URL} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-2`}>
+              <WhatsappIcon className="size-4" />
+              Comunidade no WhatsApp
+            </a>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className={`${linkClass} inline-flex items-center gap-2`}>
               <InstagramIcon className="size-4" />
               @hubcapture no Instagram

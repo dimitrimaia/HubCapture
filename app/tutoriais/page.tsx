@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { CommunityLinks } from '@/components/landing/community-section'
 import { CtaLink } from '@/components/landing/cta-link'
 import { Eyebrow } from '@/components/landing/eyebrow'
 import { SiteShell } from '@/components/landing/site-shell'
@@ -87,6 +88,14 @@ export default function TutoriaisPage() {
               Criar minha conta com VEMHUB
             </CtaLink>
             <StoreBadges className="justify-center" />
+          </div>
+
+          <div className="glass mx-auto mt-12 flex max-w-2xl flex-col gap-4 rounded-3xl p-6 text-center sm:p-8">
+            <h2 className="text-xl font-semibold tracking-tight">Ficou com alguma dúvida?</h2>
+            <p className="text-sm text-muted-foreground">
+              Entre na comunidade do WhatsApp para falar direto comigo, ou siga o @hubcapture para novos tutoriais.
+            </p>
+            <CommunityLinks className="grid gap-3 sm:grid-cols-2" />
           </div>
         </div>
       </section>

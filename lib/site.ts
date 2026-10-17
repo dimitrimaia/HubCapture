@@ -1,12 +1,13 @@
 export const REFERRAL_CODE = 'VEMHUB'
+export const PARTNER_TAGLINE = 'Partner Dimitri'
 
 export const SIGNUP_URL = 'https://ai.hub.xyz/r/VEMHUB'
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=xyz.hub.mobile&hl=pt_BR'
 export const APP_STORE_URL = 'https://apps.apple.com/br/app/hub-capture/id6772285040'
 export const APP_STORE_ID = '6772285040'
 export const INSTAGRAM_URL = 'https://instagram.com/hubcapture'
+export const WHATSAPP_COMMUNITY_URL = 'https://chat.whatsapp.com/LdeRzU2TCBm4q4DuyKgzRR'
 export const HUBCAP_URL = 'https://www.mercadolivre.com.br/up/MLBU5339859880'
-export const HUBCAP_IMAGE_URL = 'https://http2.mlstatic.com/D_NQ_NP_2X_974149-MLA117444981018_102026-F-bone-hubcap.webp'
 
 export const CADASTRO_PATH = '/cadastro'
 export const TUTORIAIS_PATH = '/tutoriais'
@@ -51,7 +52,7 @@ export const faqs = [
   {
     question: 'Preciso pagar alguma coisa para participar?',
     answer:
-      'Não. O cadastro é gratuito e o Starter Kit (faixa de cabeça e suporte para celular) é enviado sem custo. Se não quiser esperar o kit, o boné HubCap é opcional. Você não precisa indicar amigos, assistir anúncios nem comprar nada para receber.',
+      'Não. O cadastro é gratuito e o Starter Kit (faixa de cabeça e suporte para celular) é enviado sem custo, mas pode demorar a chegar. Quem preferir pode comprar o Suporte Oficial HubCap (boné com suporte), que é opcional e chega bem mais rápido. Você não precisa indicar amigos, assistir anúncios nem comprar nada para receber.',
   },
   {
     question: 'Preciso aparecer nos vídeos ou ter seguidores?',

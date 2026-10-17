@@ -23,7 +23,7 @@ export default function OpengraphImage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
           <svg width="72" height="72" viewBox="0 0 32 32">
-            <path d={LOGO_PATH} fill="#1ec872" stroke="#1ec872" strokeWidth="2" strokeLinejoin="round" />
+            <path d={LOGO_PATH} fill="#1ec872" />
           </svg>
           <div style={{ display: 'flex', fontSize: 44, fontWeight: 700 }}>
             Hub <span style={{ color: '#1ec872', marginLeft: 12 }}>Capture</span>

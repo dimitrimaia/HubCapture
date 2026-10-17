@@ -1,5 +1,6 @@
 import { CodeSection } from '@/components/landing/code-section'
 import { ColabSection } from '@/components/landing/colab-section'
+import { CommunitySection } from '@/components/landing/community-section'
 import { DifferenceSection } from '@/components/landing/difference-section'
 import { EarningModes } from '@/components/landing/earning-modes'
 import { FaqSection } from '@/components/landing/faq-section'
@@ -76,11 +77,13 @@ export default function Page() {
       <HowItWorks />
       <TutorialsCard />
       <CodeSection />
+      <ColabSection />
+      <CommunitySection />
       <Tutorial />
+      <TutorialsCard className="px-4 pb-16 sm:px-6 md:pb-24" />
       <HubcapSection />
       <EarningModes />
       <DifferenceSection />
-      <ColabSection />
       <FaqSection />
       <SeoArticle />
       <FinalCta />

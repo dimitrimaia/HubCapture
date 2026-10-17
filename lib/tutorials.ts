@@ -11,9 +11,9 @@ export const tutorialSteps = [
     youtubeId: '',
   },
   {
-    title: 'Peça o Starter Kit ou use o boné HubCap',
+    title: 'Peça o Starter Kit ou o Suporte Oficial HubCap',
     description:
-      'Solicite o Starter Kit grátis (faixa de cabeça e suporte) no seu painel. Enquanto ele não chega, o boné HubCap permite começar a gravar no mesmo dia.',
+      'Solicite o Starter Kit no seu painel: ele é grátis, mas pode demorar a chegar. Se preferir, adquira o Suporte Oficial HubCap (boné com suporte para celular), que chega bem mais rápido, é mais confortável e estável — garantindo vídeos de melhor qualidade e maior aprovação.',
     youtubeId: '',
   },
   {
