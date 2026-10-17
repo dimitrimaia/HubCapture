@@ -1,3 +1,5 @@
+import { isValidWhatsapp, onlyDigits } from './phone'
+
 export const FOLLOWER_RANGES = [
   'Até 1 mil',
   '1 mil a 10 mil',
@@ -22,18 +24,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const HANDLE_RE = /^@?[a-zA-Z0-9._]{2,30}$/
 const PROFILE_URL_RE = /^(https?:\/\/)?(www\.)?(instagram\.com|tiktok\.com)\/@?[a-zA-Z0-9._]{2,30}\/?$/i
 
-export function onlyDigits(value: string) {
-  return value.replace(/\D/g, '')
-}
-
-export function formatWhatsapp(value: string) {
-  const digits = onlyDigits(value).slice(0, 11)
-  if (digits.length <= 2) return digits.length ? `(${digits}` : ''
-  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`
-  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`
-  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`
-}
-
 export function normalizeColabLead(input: Record<string, unknown>): ColabLead {
   const text = (key: string) => (typeof input[key] === 'string' ? (input[key] as string).trim() : '')
   return {
@@ -54,7 +44,7 @@ export function validateColabLead(lead: ColabLead): ColabErrors {
   if (!(FOLLOWER_RANGES as readonly string[]).includes(lead.seguidores))
     errors.seguidores = 'Selecione sua faixa de seguidores.'
   if (!EMAIL_RE.test(lead.email)) errors.email = 'Informe um e-mail válido.'
-  if (lead.whatsapp.length < 10 || lead.whatsapp.length > 11)
+  if (!isValidWhatsapp(lead.whatsapp))
     errors.whatsapp = 'Informe o WhatsApp com DDD.'
   if (!lead.consentimento) errors.consentimento = 'Autorize o contato para continuar.'
   return errors

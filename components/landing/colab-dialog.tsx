@@ -6,10 +6,10 @@ import { createContext, useContext, useState } from 'react'
 import {
   type ColabErrors,
   FOLLOWER_RANGES,
-  formatWhatsapp,
   normalizeColabLead,
   validateColabLead,
 } from '@/lib/colab'
+import { formatWhatsapp } from '@/lib/phone'
 import { ctaClasses } from './cta-link'
 import { useMode } from './mode-context'
 

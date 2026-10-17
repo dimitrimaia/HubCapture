@@ -1,4 +1,6 @@
+import { INSTAGRAM_URL } from '@/lib/site'
 import { CtaLink } from './cta-link'
+import { InstagramIcon } from './instagram-icon'
 
 export function FinalCta() {
   return (
@@ -15,6 +17,15 @@ export function FinalCta() {
           <CtaLink variant="dark" size="lg" withArrow className="mt-2">
             Começar a Gravar Agora
           </CtaLink>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary-foreground/80 transition-colors hover:text-primary-foreground"
+          >
+            <InstagramIcon className="size-4" />
+            Siga @hubcapture no Instagram
+          </a>
         </div>
       </div>
     </section>

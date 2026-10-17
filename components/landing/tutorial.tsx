@@ -1,12 +1,11 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { Check, Lightbulb, RotateCcw, Smartphone, Sun, Volume2, X } from 'lucide-react'
 import { CopyCodeButton } from './copy-code-button'
 import { CtaLink } from './cta-link'
 import { Eyebrow } from './eyebrow'
 import { StoreBadges } from './store-badges'
 import { ModeSwitch } from './mode-context'
-import { TUTORIAIS_PATH } from '@/lib/site'
+import { HUBCAP_URL } from '@/lib/site'
 
 const setupTips = [
   { icon: Sun, label: 'Boa iluminação, uniforme' },
@@ -55,10 +54,13 @@ export function Tutorial() {
             </div>
           </TutorialStep>
 
-          <TutorialStep number={2} title="Peça seu Starter Kit grátis">
+          <TutorialStep number={2} title="Peça o Starter Kit ou o Suporte Oficial HubCap">
             <div className="grid gap-5 sm:grid-cols-[1fr_12rem] sm:items-center">
               <div>
-                <p>Tudo o que você precisa para gravar com as mãos livres chega na sua casa, sem custo:</p>
+                <p>
+                  Solicite o <strong className="text-foreground">Starter Kit</strong>: ele é grátis, mas pode demorar a
+                  chegar. Ele traz:
+                </p>
                 <ul className="mt-3 flex flex-col gap-2">
                   {['Faixa de cabeça para prender o celular', 'Suporte que encaixa no seu celular', 'Guia rápido da primeira gravação'].map(
                     (item) => (
@@ -69,6 +71,14 @@ export function Tutorial() {
                     ),
                   )}
                 </ul>
+                <p className="mt-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
+                  Prefere começar já? O <strong className="text-foreground">Suporte Oficial HubCap</strong> (boné com
+                  suporte) chega bem mais rápido, é mais confortável e estável, garantindo vídeos de melhor qualidade e
+                  maior aprovação.{' '}
+                  <a href={HUBCAP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline-offset-4 hover:underline">
+                    Ver o boné HubCap
+                  </a>
+                </p>
               </div>
               <div className="relative aspect-square overflow-hidden rounded-2xl border border-border">
                 <Image
@@ -136,16 +146,10 @@ export function Tutorial() {
           </TutorialStep>
         </ol>
 
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <div className="mt-10 flex justify-center">
           <CtaLink size="lg" withArrow>
             Começar agora com VEMHUB
           </CtaLink>
-          <Link
-            href={TUTORIAIS_PATH}
-            className="inline-flex h-13 items-center justify-center rounded-full px-5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            Ver tutoriais em vídeo
-          </Link>
         </div>
       </div>
     </section>

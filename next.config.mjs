@@ -5,7 +5,6 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-    remotePatterns: [{ protocol: 'https', hostname: 'http2.mlstatic.com' }],
   },
   async headers() {
     return [
