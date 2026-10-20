@@ -1,7 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Space_Grotesk } from 'next/font/google'
-import { APP_STORE_ID, APP_STORE_URL, PLAY_STORE_URL, SITE_URL } from '@/lib/site'
+import { APP_STORE_ID, APP_STORE_URL, IS_INDEXABLE, PLAY_STORE_URL, SITE_URL } from '@/lib/site'
 import './globals.css'
 
 const spaceGrotesk = Space_Grotesk({
@@ -54,7 +54,10 @@ export const metadata: Metadata = {
     title,
     description,
   },
-  robots: { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
+  robots: IS_INDEXABLE
+    ? { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } }
+    : { index: false, follow: false },
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
   itunes: { appId: APP_STORE_ID },
   appLinks: {
     ios: { url: APP_STORE_URL, app_store_id: APP_STORE_ID, app_name: 'Hub Capture' },

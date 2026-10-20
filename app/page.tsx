@@ -51,6 +51,7 @@ const structuredData = {
         { '@type': 'HowToStep', name: 'Crie sua conta com o código VEMHUB', url: `${SITE_URL}${CADASTRO_PATH}` },
         { '@type': 'HowToStep', name: 'Peça seu Starter Kit grátis ou use o boné HubCap' },
         { '@type': 'HowToStep', name: 'Baixe o app Hub Capture e escolha Residencial ou Comercial' },
+        { '@type': 'HowToStep', name: 'Vincule o app Minute com o mesmo e-mail para liberar tarefas extras' },
         { '@type': 'HowToStep', name: 'Posicione o celular na cabeça, na altura dos olhos' },
         { '@type': 'HowToStep', name: 'Grave a tarefa e receba via PIX' },
       ],

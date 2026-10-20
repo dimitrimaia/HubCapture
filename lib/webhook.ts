@@ -2,6 +2,17 @@ export type LeadType = 'colab' | 'cadastro'
 
 const WEBHOOK_TIMEOUT_MS = 8000
 
+/** Ex.: "20/10/2026 11:22:12" no horário de Brasília, legível direto na planilha. */
+function formatSaoPaulo(date: Date) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    dateStyle: 'short',
+    timeStyle: 'medium',
+  })
+    .format(date)
+    .replace(',', '')
+}
+
 /**
  * CADASTRO_WEBHOOK_URL → planilha "Usuários Cadastrados HubCapture".
  * INFLUENCER_WEBHOOK_URL → planilha de afiliados/influencers.
@@ -20,7 +31,7 @@ function webhookUrlFor(tipo: LeadType) {
  * por isso só consideramos sucesso quando a resposta é JSON com `ok: true`.
  */
 export async function forwardLead(tipo: LeadType, lead: Record<string, unknown>) {
-  const payload = { tipo, ...lead, origem: 'hubcapture.app', criadoEm: new Date().toISOString() }
+  const payload = { tipo, ...lead, origem: 'hubcapture.app', criadoEm: formatSaoPaulo(new Date()) }
   const url = webhookUrlFor(tipo)
 
   if (!url) {
