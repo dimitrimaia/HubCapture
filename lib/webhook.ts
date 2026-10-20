@@ -2,9 +2,16 @@ export type LeadType = 'colab' | 'cadastro'
 
 const WEBHOOK_TIMEOUT_MS = 8000
 
+/**
+ * CADASTRO_WEBHOOK_URL → planilha "Usuários Cadastrados HubCapture".
+ * INFLUENCER_WEBHOOK_URL → planilha de afiliados/influencers.
+ * COLAB_WEBHOOK_URL é o nome antigo: serve de fallback para o cadastro e só é usado para
+ * influencers quando CADASTRO_WEBHOOK_URL também existe, para não misturar as planilhas.
+ */
 function webhookUrlFor(tipo: LeadType) {
-  if (tipo === 'cadastro') return process.env.CADASTRO_WEBHOOK_URL || process.env.COLAB_WEBHOOK_URL
-  return process.env.COLAB_WEBHOOK_URL
+  const { CADASTRO_WEBHOOK_URL, INFLUENCER_WEBHOOK_URL, COLAB_WEBHOOK_URL } = process.env
+  if (tipo === 'cadastro') return CADASTRO_WEBHOOK_URL || COLAB_WEBHOOK_URL
+  return INFLUENCER_WEBHOOK_URL || (CADASTRO_WEBHOOK_URL ? COLAB_WEBHOOK_URL : undefined)
 }
 
 /**

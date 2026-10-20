@@ -1,5 +1,14 @@
 # Leads no Google Sheets (Colab e Cadastro)
 
+| Variável na Vercel | Planilha | Formulário |
+| --- | --- | --- |
+| `CADASTRO_WEBHOOK_URL` | Usuários Cadastrados HubCapture | página `/cadastro` (nome + WhatsApp) |
+| `INFLUENCER_WEBHOOK_URL` | Afiliados / influencers | modal "Colab com Influencers" |
+
+`COLAB_WEBHOOK_URL` é o nome antigo. Se ele existir sozinho, é usado **só para o cadastro** (os influencers não entram
+nessa planilha e ficam apenas nos logs). Cada planilha tem seu próprio Apps Script (Extensões → Apps Script dentro dela)
+com o código abaixo; o script grava cada envio na aba do seu `tipo`.
+
 O site envia os leads pelo servidor (`lib/webhook.ts`) para um Google Apps Script, que grava na planilha.
 Cada envio tem o campo `tipo`: `colab` (formulário de influencers) ou `cadastro` (página `/cadastro`).
 
@@ -56,7 +65,7 @@ Se for um projeto avulso, troque `SpreadsheetApp.getActiveSpreadsheet()` por `Sp
 ## 3. Conectar ao site (Vercel)
 
 1. Vercel → projeto → **Settings → Environment Variables**.
-2. Adicione `COLAB_WEBHOOK_URL` com a URL `/exec` (ambientes Production e Preview).
+2. Adicione `CADASTRO_WEBHOOK_URL` e `INFLUENCER_WEBHOOK_URL`, cada uma com a URL `/exec` da sua planilha (Production e Preview).
 3. **Redeploy** o projeto (variáveis só valem para deploys novos).
 
 O arquivo `.env.example` do repositório não é lido em produção; sem a variável na Vercel os leads só aparecem nos logs.
