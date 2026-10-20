@@ -7,6 +7,7 @@ export const sectionLinks = [
   { href: '/#comunidade', label: 'Comunidade' },
   { href: '/#tutorial', label: 'Tutorial' },
   { href: '/#modos', label: 'Ganhos' },
+  { href: '/#guias', label: 'Guias' },
   { href: '/#faq', label: 'FAQ' },
 ]
 

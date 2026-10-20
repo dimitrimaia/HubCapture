@@ -5,6 +5,7 @@ import { DifferenceSection } from '@/components/landing/difference-section'
 import { EarningModes } from '@/components/landing/earning-modes'
 import { FaqSection } from '@/components/landing/faq-section'
 import { FinalCta } from '@/components/landing/final-cta'
+import { GuidesSection } from '@/components/landing/guides-section'
 import { Hero } from '@/components/landing/hero'
 import { HowItWorks } from '@/components/landing/how-it-works'
 import { HubcapSection } from '@/components/landing/hubcap-section'
@@ -85,6 +86,7 @@ export default function Page() {
       <HubcapSection />
       <EarningModes />
       <DifferenceSection />
+      <GuidesSection />
       <FaqSection />
       <SeoArticle />
       <FinalCta />

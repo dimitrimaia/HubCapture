@@ -12,6 +12,8 @@ export const HUBCAP_URL = 'https://www.mercadolivre.com.br/up/MLBU5339859880'
 export const CADASTRO_PATH = '/cadastro'
 export const TUTORIAIS_PATH = '/tutoriais'
 export const GUIA_PATH = '/hub-capture-app'
+export const QUANTO_PAGA_PATH = '/hub-data-quanto-paga'
+export const CONFIAVEL_PATH = '/hub-data-e-confiavel'
 
 // Domínio oficial fixo: canonical, sitemap e Open Graph sempre apontam para hubcapture.app
 // (nunca para o *.vercel.app), senão o Google indexa o domínio errado.
