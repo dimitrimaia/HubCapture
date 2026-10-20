@@ -71,7 +71,7 @@ export default function TutoriaisPage() {
                 id={`passo-${index + 1}`}
                 className="glass grid scroll-mt-24 gap-6 rounded-3xl p-5 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center"
               >
-                <VideoEmbed youtubeId={step.youtubeId} title={`Passo ${index + 1}: ${step.title}`} />
+                <VideoEmbed youtubeId={step.youtubeId} videoUrl={step.videoUrl} title={`Passo ${index + 1}: ${step.title}`} />
                 <div className="flex min-w-0 flex-col gap-3">
                   <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground">
                     {`Passo ${index + 1}`}

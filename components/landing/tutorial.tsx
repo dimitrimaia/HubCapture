@@ -5,7 +5,7 @@ import { CtaLink } from './cta-link'
 import { Eyebrow } from './eyebrow'
 import { StoreBadges } from './store-badges'
 import { ModeSwitch } from './mode-context'
-import { HUBCAP_URL } from '@/lib/site'
+import { HUB_DASHBOARD_URL, HUBCAP_URL } from '@/lib/site'
 
 const setupTips = [
   { icon: Sun, label: 'Boa iluminação, uniforme' },
@@ -92,20 +92,43 @@ export function Tutorial() {
             </div>
           </TutorialStep>
 
-          <TutorialStep number={3} title="Baixe o app Hub Capture e escolha o modo certo">
+          <TutorialStep number={3} title="Grave pelo app Hub Capture e também pelo Minute">
             <p>
-              O Hub Capture é o app onde você grava e envia as tarefas. Baixe na App Store ou no Google Play e entre com
-              o mesmo e-mail da sua conta Hub. Depois, em <strong className="text-foreground">Configurações → Organization</strong>, escolha:
+              São duas fontes de tarefas pagas, somadas no mesmo saldo. Use as duas para ganhar mais e escolha o modo{' '}
+              <strong className="text-foreground">Residencial (Casa)</strong> ou{' '}
+              <strong className="text-foreground">Comercial (Trabalho)</strong>.
             </p>
-            <StoreBadges className="mt-4" />
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-background/50 p-4">
-                <p className="font-semibold text-foreground">Residencial = Casa</p>
-                <p className="mt-1 text-sm">Tarefas do dia a dia na sua casa. Até R$ 35/h.</p>
+              <div className="flex flex-col gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-4">
+                <p className="font-semibold text-foreground">Tarefas no app Hub Capture</p>
+                <p className="text-sm">
+                  Baixe o Hub Capture e entre com sua conta. Em <strong className="text-foreground">Gravar e ganhar</strong>{' '}
+                  você vê as tarefas, as horas gravadas e as aprovações.
+                </p>
+                <StoreBadges stacked />
               </div>
-              <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
-                <p className="font-semibold text-foreground">Comercial = Trabalho</p>
-                <p className="mt-1 text-sm">Atividades profissionais no expediente. Até R$ 50/h.</p>
+              <div className="flex flex-col gap-3 rounded-2xl border border-border bg-background/50 p-4">
+                <p className="font-semibold text-foreground">Tarefas extras no Minute</p>
+                <ol className="flex list-decimal flex-col gap-1.5 pl-4 text-sm">
+                  <li>
+                    No painel, abra <strong className="text-foreground">Vincule sua conta do Minute</strong> e copie o
+                    e-mail e o código de convite pessoal.
+                  </li>
+                  <li>Baixe o Minute pelos botões do painel.</li>
+                  <li>
+                    Entre ou cadastre-se <strong className="text-foreground">uma única vez</strong> com esse mesmo
+                    e-mail e código. Não crie uma segunda conta.
+                  </li>
+                </ol>
+                <p className="text-xs">A vinculação aparece em até ~20 min após a primeira gravação.</p>
+                <a
+                  href={HUB_DASHBOARD_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-auto inline-flex h-11 items-center justify-center rounded-full border border-foreground/12 px-4 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5"
+                >
+                  Abrir o painel Hub
+                </a>
               </div>
             </div>
           </TutorialStep>
@@ -131,8 +154,8 @@ export function Tutorial() {
           <TutorialStep number={5} title="Grave a tarefa de verdade e envie">
             <p>
               <ModeSwitch
-                trabalho="Escolha uma tarefa do seu setor, toque em Play e trabalhe normalmente. Ao terminar, envie o vídeo para análise."
-                casa="Escolha uma tarefa da casa, como cozinhar ou organizar, toque em Play e faça no seu ritmo. Ao terminar, envie o vídeo para análise."
+                trabalho="No Hub Capture ou no Minute, escolha uma tarefa do seu setor, toque em Play e trabalhe normalmente. Ao terminar, envie o vídeo para análise."
+                casa="No Hub Capture ou no Minute, escolha uma tarefa da casa, como cozinhar ou organizar, toque em Play e faça no seu ritmo. Ao terminar, envie o vídeo para análise."
               />
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">

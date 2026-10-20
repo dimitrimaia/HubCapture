@@ -11,23 +11,32 @@ export const HUBCAP_URL = 'https://www.mercadolivre.com.br/up/MLBU5339859880'
 
 export const CADASTRO_PATH = '/cadastro'
 export const TUTORIAIS_PATH = '/tutoriais'
+export const GUIA_PATH = '/hub-capture-app'
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
-  ? process.env.NEXT_PUBLIC_SITE_URL
-  : process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : 'http://localhost:3000'
+// Domínio oficial fixo: canonical, sitemap e Open Graph sempre apontam para hubcapture.app
+// (nunca para o *.vercel.app), senão o Google indexa o domínio errado.
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://hubcapture.app'
+
+/** Só a produção é indexável; previews da Vercel e dev local ficam com noindex. */
+export const IS_INDEXABLE = process.env.VERCEL_ENV ? process.env.VERCEL_ENV === 'production' : process.env.NODE_ENV === 'production'
+
+export const HUB_DASHBOARD_URL = 'https://app.hub.xyz/train'
 
 export const faqs = [
   {
     question: 'O que é o Hub Capture?',
     answer:
-      'Hub Capture é o app oficial da Hub (Hub Data) para gravar tarefas em primeira pessoa com o celular e ganhar por hora aprovada. Também é chamado de Hub App. Você instala o app, grava a tarefa com o celular preso na cabeça e acompanha os pagamentos pelo painel.',
+      'Hub Capture é o app oficial da Hub (Hub Data) para gravar tarefas em primeira pessoa com o celular e ganhar por hora aprovada. Também é chamado de Hub App. Você instala o app, grava a tarefa com o celular preso na cabeça e acompanha os pagamentos pelo painel. Além das tarefas do próprio Hub Capture, você pode vincular o app Minute para liberar tarefas extras, somadas no mesmo saldo.',
   },
   {
     question: 'Onde baixar o app Hub Capture?',
     answer:
       'O Hub Capture (Hub App) é gratuito no Google Play para Android e na App Store para iPhone. Os links oficiais de download estão no menu e no rodapé deste site.',
+  },
+  {
+    question: 'O que é o Minute e como vinculo ao Hub Capture?',
+    answer:
+      'O Minute é um segundo app com mais tarefas pagas da Hub. No painel do Hub Capture, em "Gravar e ganhar" → "Vincule sua conta do Minute", copie o e-mail e o código de convite pessoal, baixe o Minute pelos botões do painel e entre (ou cadastre-se uma única vez) com esse mesmo e-mail e código. Não crie uma segunda conta. A vinculação aparece em até cerca de 20 minutos após a primeira gravação.',
   },
   {
     question: 'O que é a Hub Data?',
@@ -62,7 +71,7 @@ export const faqs = [
   {
     question: 'Qual celular preciso para gravar?',
     answer:
-      'Um smartphone Android ou iPhone com câmera traseira em bom estado, espaço livre de armazenamento e bateria carregada. Você grava pelo app Hub Capture, disponível na App Store e no Google Play.',
+      'Um smartphone Android ou iPhone com câmera traseira em bom estado, espaço livre de armazenamento e bateria carregada. Você grava pelo app Hub Capture (App Store e Google Play) e também pode gravar tarefas extras no app Minute.',
   },
   {
     question: 'Posso gravar no meu trabalho?',

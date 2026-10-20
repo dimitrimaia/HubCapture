@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { sectionLinks } from '@/lib/navigation'
-import { CADASTRO_PATH, HUBCAP_URL, INSTAGRAM_URL, PARTNER_TAGLINE, SIGNUP_URL, TUTORIAIS_PATH, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
+import { CADASTRO_PATH, GUIA_PATH, HUBCAP_URL, INSTAGRAM_URL, PARTNER_TAGLINE, SIGNUP_URL, TUTORIAIS_PATH, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
 import { ColabButton } from './colab-dialog'
 import { CtaLink } from './cta-link'
 import { InstagramIcon } from './instagram-icon'
@@ -25,6 +25,9 @@ export function SiteFooter() {
 
           <nav aria-label="Rodapé" className="flex flex-col gap-3">
             <p className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-primary">Navegação</p>
+            <Link href={GUIA_PATH} className={linkClass}>
+              Guia do Hub Capture App
+            </Link>
             <Link href={TUTORIAIS_PATH} className={linkClass}>
               Tutoriais em vídeo
             </Link>

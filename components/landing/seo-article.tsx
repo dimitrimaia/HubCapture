@@ -1,3 +1,6 @@
+import Link from 'next/link'
+import { GUIA_PATH } from '@/lib/site'
+
 export function SeoArticle() {
   return (
     <section aria-labelledby="sobre-hub-title" className="px-4 py-16 sm:px-6 md:py-20">
@@ -36,8 +39,16 @@ export function SeoArticle() {
         <h3>Como se cadastrar com o código VEMHUB</h3>
         <p>
           O cadastro é gratuito. Use o <strong>código de convite oficial VEMHUB</strong> para criar sua conta, receber o
-          Starter Kit grátis e participar dos sorteios exclusivos. Depois é só baixar o app Hub Capture, escolher a
+          Starter Kit grátis e participar dos sorteios exclusivos. Depois é só baixar o app Hub Capture — e, se quiser mais tarefas, vincular o app Minute com o mesmo e-mail —, escolher a
           organização Residencial ou Comercial e começar a gravar.
+        </p>
+
+        <p>
+          Quer o passo a passo detalhado? Leia o{' '}
+          <Link href={GUIA_PATH} className="font-medium text-primary underline-offset-4 hover:underline">
+            guia completo do Hub Capture App
+          </Link>
+          .
         </p>
 
         <h3>A Hub Data é confiável?</h3>
