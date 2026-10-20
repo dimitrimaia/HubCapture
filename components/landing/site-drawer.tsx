@@ -1,10 +1,11 @@
 'use client'
 
 import { Dialog } from '@base-ui/react/dialog'
-import { HardHat, LogIn, Menu, PlayCircle, UserPlus, X } from 'lucide-react'
+import { HardHat, LogIn, Menu, PlayCircle, Sparkles, UserPlus, X } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 import { sectionLinks } from '@/lib/navigation'
+import { cn } from '@/lib/utils'
 import {
   CADASTRO_PATH,
   HUBCAP_URL,
@@ -14,7 +15,7 @@ import {
   TUTORIAIS_PATH,
   WHATSAPP_COMMUNITY_URL,
 } from '@/lib/site'
-import { ColabButton } from './colab-dialog'
+import { useColab } from './colab-dialog'
 import { ctaClasses } from './cta-link'
 import { InstagramIcon } from './instagram-icon'
 import { Logo } from './logo'
@@ -22,8 +23,6 @@ import { useMode } from './mode-context'
 import { StoreBadges } from './store-badges'
 import { WhatsappIcon } from './whatsapp-icon'
 
-const rowClass =
-  'flex min-h-12 items-center gap-3 rounded-xl px-3 text-base font-medium text-foreground transition-colors outline-none hover:bg-foreground/5 focus-visible:ring-3 focus-visible:ring-ring'
 
 const sectionNav = sectionLinks.filter((item) => !['/#colab', '/#comunidade'].includes(item.href))
 
@@ -31,6 +30,7 @@ export function SiteDrawer() {
   const { mode } = useMode()
   const [open, setOpen] = useState(false)
   const close = () => setOpen(false)
+  const { open: openColab } = useColab()
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -72,36 +72,13 @@ export function SiteDrawer() {
               </Link>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <Link href={TUTORIAIS_PATH} onClick={close} className={rowClass}>
-                <PlayCircle className="size-5 text-primary" aria-hidden="true" />
-                Tutoriais em vídeo
-              </Link>
-              <a
-                href={WHATSAPP_COMMUNITY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={close}
-                className="flex min-h-14 items-center gap-3 rounded-2xl border border-primary/35 bg-primary/10 px-3 outline-none transition-colors hover:bg-primary/15 focus-visible:ring-3 focus-visible:ring-ring"
-              >
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                  <WhatsappIcon className="size-5" />
-                </span>
-                <span className="flex flex-col">
-                  <span className="font-semibold">Comunidade no WhatsApp</span>
-                  <span className="text-xs text-muted-foreground">Dúvidas e suporte direto comigo</span>
-                </span>
-              </a>
-              <ColabButton className="w-full" onClick={close} />
-              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" onClick={close} className={rowClass}>
-                <InstagramIcon className="size-5 text-primary" />
-                Instagram @hubcapture
-              </a>
-              <a href={HUBCAP_URL} target="_blank" rel="noopener noreferrer" onClick={close} className={rowClass}>
-                <HardHat className="size-5 text-primary" aria-hidden="true" />
-                Boné oficial HubCap
-              </a>
-            </div>
+            <ul className="flex flex-col gap-2">
+              <DrawerItem href={TUTORIAIS_PATH} onClick={close} icon={<PlayCircle className="size-5" aria-hidden="true" />} title="Tutoriais em vídeo" subtitle="Passo a passo do cadastro ao PIX" />
+              <DrawerItem href={WHATSAPP_COMMUNITY_URL} external highlight onClick={close} icon={<WhatsappIcon className="size-5" />} title="Comunidade no WhatsApp" subtitle="Dúvidas e suporte direto comigo" />
+              <DrawerItem onClick={() => { close(); openColab() }} icon={<Sparkles className="size-5" aria-hidden="true" />} title="Colab com Influencers" subtitle="Seja parceiro do Hub Capture" />
+              <DrawerItem href={INSTAGRAM_URL} external onClick={close} icon={<InstagramIcon className="size-5" />} title="Instagram @hubcapture" subtitle="Novidades e sorteios" />
+              <DrawerItem href={HUBCAP_URL} external onClick={close} icon={<HardHat className="size-5" aria-hidden="true" />} title="Boné oficial HubCap" subtitle="Grave com as mãos livres hoje" />
+            </ul>
 
             <nav aria-label="Menu" className="border-t border-border pt-4">
               <ul className="grid grid-cols-2 gap-x-2">
@@ -130,5 +107,64 @@ export function SiteDrawer() {
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>
+  )
+}
+
+function DrawerItem({
+  href,
+  external = false,
+  highlight = false,
+  onClick,
+  icon,
+  title,
+  subtitle,
+}: {
+  href?: string
+  external?: boolean
+  highlight?: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  title: string
+  subtitle: string
+}) {
+  const className = cn(
+    'flex min-h-14 w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring',
+    highlight
+      ? 'border-primary/40 bg-primary/10 hover:bg-primary/15'
+      : 'border-border bg-foreground/[0.03] hover:border-primary/30 hover:bg-foreground/[0.06]',
+  )
+  const content = (
+    <>
+      <span
+        className={cn(
+          'flex size-9 shrink-0 items-center justify-center rounded-xl',
+          highlight ? 'bg-primary text-primary-foreground' : 'bg-primary/15 text-primary',
+        )}
+      >
+        {icon}
+      </span>
+      <span className="flex min-w-0 flex-col">
+        <span className="font-semibold text-foreground">{title}</span>
+        <span className="text-xs text-muted-foreground">{subtitle}</span>
+      </span>
+    </>
+  )
+
+  return (
+    <li>
+      {!href ? (
+        <button type="button" onClick={onClick} className={className}>
+          {content}
+        </button>
+      ) : external ? (
+        <a href={href} target="_blank" rel="noopener noreferrer" onClick={onClick} className={className}>
+          {content}
+        </a>
+      ) : (
+        <Link href={href} onClick={onClick} className={className}>
+          {content}
+        </Link>
+      )}
+    </li>
   )
 }

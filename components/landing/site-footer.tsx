@@ -66,7 +66,7 @@ export function SiteFooter() {
             rel="noopener noreferrer"
             className="font-mono transition-colors hover:text-primary"
           >
-            ai.hub.xyz/r/VEMHUB
+            app.hub.xyz/r/VEMHUB
           </a>
         </div>
       </div>
