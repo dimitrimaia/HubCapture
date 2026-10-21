@@ -14,8 +14,15 @@ bancários e recusa com gentileza assuntos fora do tema.
 1. Entre em https://aistudio.google.com com uma conta Google.
 2. **Get API key → Create API key** (pode criar um projeto novo, ex.: "hubcapture").
 3. Na Vercel: **Settings → Environment Variables** → `GEMINI_API_KEY` = a chave → Redeploy.
-4. Opcional: `ASSISTENTE_MODELO` para trocar o modelo (padrão `gemini-2.5-flash`; ex.: `gemini-2.5-flash-lite`,
-   que tem cota gratuita maior).
+4. Opcional: `ASSISTENTE_MODELO` para fixar um modelo. Sem ela, o site tenta em ordem `gemini-flash-latest`
+   (apelido do Google para o Flash mais novo), `gemini-3.6-flash`, `gemini-flash-lite-latest` e `gemini-3.5-flash-lite`,
+   e usa o primeiro que responder. O `gemini-2.5-flash` foi desligado pelo Google em 16/10/2026.
+
+A chave também é aceita com os nomes `GOOGLE_GENERATIVE_AI_API_KEY` (o que a integração Google da Vercel cria) ou
+`GOOGLE_API_KEY`.
+
+**Chat respondendo "Não consegui responder agora"?** Entre em `/equipe/leads` e toque em **Testar assistente**: o
+painel mostra o erro real do Google (chave ausente, chave inválida, modelo indisponível ou cota esgotada) e o que fazer.
 
 Sem a chave, o chat mostra uma mensagem com o link do WhatsApp e da comunidade (a API responde 503).
 

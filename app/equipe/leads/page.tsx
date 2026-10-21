@@ -6,6 +6,7 @@ import { lerSessao } from '@/lib/equipe'
 import { type FiltroLeads, listarLeads, resumoLeads } from '@/lib/leads'
 import { sair } from '../actions'
 import { LeadsPainel, type LeadPainel } from './leads-painel'
+import { TesteAssistente } from './teste-assistente'
 
 const FILTROS: { id: FiltroLeads; rotulo: string }[] = [
   { id: 'nao-convertidos', rotulo: 'Ainda não converteu' },
@@ -73,6 +74,8 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         <p className="mt-1 text-sm text-muted-foreground">
           Chame quem deixou nome e WhatsApp e ainda não criou a conta. Ao tocar em “Chamar”, fica registrado quem chamou.
         </p>
+
+        <TesteAssistente />
 
         {!leads ? (
           <div className="glass mt-6 flex flex-col gap-3 rounded-3xl p-6">
