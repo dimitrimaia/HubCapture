@@ -38,8 +38,8 @@ export default function CadastroPage() {
               Crie sua conta no <span className="text-primary">Hub Capture</span>
             </h1>
             <p className="text-pretty leading-relaxed text-muted-foreground sm:text-lg">
-              Deixe seu nome e WhatsApp para eu te ajudar nos primeiros passos. Logo depois você segue para a página
-              oficial da Hub com o código de convite já preenchido.
+              Deixe seu nome e WhatsApp para eu te ajudar nos primeiros passos. Logo depois você cria sua conta na página
+              oficial da Hub, com o código de convite já preenchido.
             </p>
             <ul className="flex flex-col gap-2.5">
               {benefits.map((item) => (
@@ -61,8 +61,6 @@ export default function CadastroPage() {
               className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-primary/15 blur-3xl"
             />
             <div className="relative">
-              <h2 className="text-xl font-semibold tracking-tight">Comece em menos de 1 minuto</h2>
-              <p className="mt-1 mb-6 text-sm text-muted-foreground">Passo 1 de 2 · seus dados</p>
               <SignupForm />
             </div>
           </div>

@@ -1,4 +1,5 @@
-export type LeadType = 'colab' | 'cadastro'
+/** acao: botão tocado no próximo passo do cadastro ou chamado feito pela equipe (aba "Acoes"). */
+export type LeadType = 'colab' | 'cadastro' | 'acao'
 
 const WEBHOOK_TIMEOUT_MS = 8000
 
@@ -21,7 +22,7 @@ function formatSaoPaulo(date: Date) {
  */
 function webhookUrlFor(tipo: LeadType) {
   const { CADASTRO_WEBHOOK_URL, INFLUENCER_WEBHOOK_URL, COLAB_WEBHOOK_URL } = process.env
-  if (tipo === 'cadastro') return CADASTRO_WEBHOOK_URL || COLAB_WEBHOOK_URL
+  if (tipo === 'cadastro' || tipo === 'acao') return CADASTRO_WEBHOOK_URL || COLAB_WEBHOOK_URL
   return INFLUENCER_WEBHOOK_URL || (CADASTRO_WEBHOOK_URL ? COLAB_WEBHOOK_URL : undefined)
 }
 
@@ -60,4 +61,44 @@ export async function forwardLead(tipo: LeadType, lead: Record<string, unknown>)
     console.error(`[leads] Falha ao enviar lead "${tipo}" para o webhook:`, error)
     return false
   }
+}
+
+export type LinhaPlanilha = { criadoEm?: string; nome?: string; whatsapp?: string | number }
+
+/**
+ * Lê a aba "Cadastro" pela função doGet do Apps Script (protegida por PLANILHA_LEITURA_TOKEN).
+ * Usado pelo painel da equipe para importar quem se cadastrou antes do banco existir.
+ */
+export async function lerCadastrosDaPlanilha(): Promise<{ ok: true; linhas: LinhaPlanilha[] } | { ok: false; erro: string }> {
+  const url = webhookUrlFor('cadastro')
+  const token = process.env.PLANILHA_LEITURA_TOKEN
+  if (!url || !token) return { ok: false, erro: 'Configure CADASTRO_WEBHOOK_URL e PLANILHA_LEITURA_TOKEN na Vercel.' }
+
+  try {
+    const endereco = new URL(url)
+    endereco.searchParams.set('token', token)
+    endereco.searchParams.set('aba', 'Cadastro')
+    const response = await fetch(endereco, { redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(20000) })
+    const body = await response.text()
+    const dados = JSON.parse(body)
+    if (!dados?.ok || !Array.isArray(dados.linhas)) {
+      return { ok: false, erro: dados?.erro ? String(dados.erro) : 'A planilha não devolveu as linhas. Atualize o Apps Script.' }
+    }
+    return { ok: true, linhas: dados.linhas }
+  } catch (error) {
+    console.error('[leads] Falha ao ler a planilha:', error)
+    return { ok: false, erro: 'Não foi possível ler a planilha (resposta inválida). Confira a implantação do Apps Script.' }
+  }
+}
+
+/** "20/10/2026 11:22:12" (horário de Brasília) ou ISO → Date. */
+export function parseDataPlanilha(valor?: string) {
+  if (!valor) return undefined
+  const br = /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/.exec(String(valor).trim())
+  if (br) {
+    const [, dia, mes, ano, hora = '00', minuto = '00', segundo = '00'] = br
+    return new Date(`${ano}-${mes}-${dia}T${hora}:${minuto}:${segundo}-03:00`)
+  }
+  const data = new Date(valor)
+  return Number.isNaN(data.getTime()) ? undefined : data
 }

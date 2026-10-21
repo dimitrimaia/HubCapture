@@ -45,6 +45,7 @@ export function Hero() {
               de gravação aprovada
             </p>
           </div>
+          <p className="-mt-4 text-xs text-muted-foreground/80">Oportunidade variável, sem ganho garantido.</p>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <CtaLink size="lg" withArrow>

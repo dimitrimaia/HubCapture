@@ -3,7 +3,7 @@ import { IS_INDEXABLE, SITE_URL } from '@/lib/site'
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: IS_INDEXABLE ? { userAgent: '*', allow: '/', disallow: '/api/' } : { userAgent: '*', disallow: '/' },
+    rules: IS_INDEXABLE ? { userAgent: '*', allow: '/', disallow: ['/api/', '/equipe'] } : { userAgent: '*', disallow: '/' },
     sitemap: `${SITE_URL}/sitemap.xml`,
   }
 }

@@ -40,7 +40,7 @@ export function EarningModes() {
             Dois modos. Você escolhe onde gravar.
           </h2>
           <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
-            Alterne entre Casa e Trabalho no app sempre que quiser. Os valores são por hora de gravação aprovada.
+            Alterne entre Casa e Trabalho no app sempre que quiser. Os valores são máximos, por hora de gravação aprovada, e variam por tarefa — oportunidade variável, sem ganho garantido.
           </p>
         </div>
 
