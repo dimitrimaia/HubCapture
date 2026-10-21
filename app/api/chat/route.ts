@@ -2,7 +2,7 @@ import { AssistenteIndisponivel, assistenteConfigurado, gerarResposta, limparHis
 import { ipDoPedido } from '@/lib/ip'
 import { criarLimite } from '@/lib/limite'
 
-export const maxDuration = 30
+export const maxDuration = 60
 
 const permitir = criarLimite({ maximo: 20, janelaMs: 10 * 60 * 1000 })
 
