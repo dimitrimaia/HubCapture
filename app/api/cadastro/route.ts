@@ -1,4 +1,6 @@
 import { normalizeCadastroLead, validateCadastroLead } from '@/lib/cadastro'
+import { salvarLead } from '@/lib/leads'
+import { toE164 } from '@/lib/phone'
 import { forwardLead } from '@/lib/webhook'
 
 export async function POST(request: Request) {
@@ -16,12 +18,20 @@ export async function POST(request: Request) {
 
   const lead = normalizeCadastroLead(body)
   const errors = validateCadastroLead(lead)
-  if (Object.keys(errors).length > 0) {
+  const whatsapp = toE164(lead.whatsapp)
+  if (!whatsapp) errors.whatsapp ??= 'Informe o WhatsApp com DDD.'
+  if (Object.keys(errors).length > 0 || !whatsapp) {
     return Response.json({ ok: false, errors }, { status: 400 })
   }
 
-  if (!(await forwardLead('cadastro', lead))) {
+  // Banco (painel da equipe) e planilha (cópia de segurança) em paralelo.
+  const [banco, planilha] = await Promise.allSettled([salvarLead({ nome: lead.nome, whatsapp }), forwardLead('cadastro', lead)])
+  if (banco.status === 'rejected') console.error('[leads] Falha ao salvar no banco:', banco.reason)
+  const id = banco.status === 'fulfilled' ? banco.value : null
+  const salvouPlanilha = planilha.status === 'fulfilled' && planilha.value
+
+  if (!id && !salvouPlanilha) {
     return Response.json({ ok: false, error: 'Não foi possível enviar agora. Tente novamente.' }, { status: 502 })
   }
-  return Response.json({ ok: true })
+  return Response.json({ ok: true, id })
 }

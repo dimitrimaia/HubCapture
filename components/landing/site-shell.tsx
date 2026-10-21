@@ -1,3 +1,5 @@
+import { CadastroLembrete } from './cadastro-lembrete'
+import { ChatWidget } from './chat-widget'
 import { ColabProvider } from './colab-dialog'
 import { ModeBar } from './mode-bar'
 import { ModeProvider } from './mode-context'
@@ -15,10 +17,12 @@ export function SiteShell({ children, withModeBar = false }: { children: React.R
         />
         <div className="relative">
           <SiteHeader />
+          <CadastroLembrete />
           <main>{children}</main>
           <SiteFooter />
         </div>
         {withModeBar && <ModeBar />}
+        <ChatWidget acimaDaModeBar={withModeBar} />
       </ColabProvider>
     </ModeProvider>
   )

@@ -22,6 +22,9 @@ export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://hubcapture.
 /** Só a produção é indexável; previews da Vercel e dev local ficam com noindex. */
 export const IS_INDEXABLE = process.env.VERCEL_ENV ? process.env.VERCEL_ENV === 'production' : process.env.NODE_ENV === 'production'
 
+/** Número do atendimento (só dígitos, com DDI). Vem da Vercel: NEXT_PUBLIC_WHATSAPP_ATENDIMENTO. */
+export const WHATSAPP_ATENDIMENTO = (process.env.NEXT_PUBLIC_WHATSAPP_ATENDIMENTO ?? '').replace(/\D/g, '')
+
 export const HUB_DASHBOARD_URL = 'https://app.hub.xyz/train'
 
 export const faqs = [
