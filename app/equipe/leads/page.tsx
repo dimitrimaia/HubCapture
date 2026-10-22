@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Logo } from '@/components/landing/logo'
 import { lerSessao } from '@/lib/equipe'
-import { type FiltroLeads, listarLeads, resumoLeads } from '@/lib/leads'
+import { explicarErroBanco, type FiltroLeads, listarLeads, resumoLeads } from '@/lib/leads'
 import { sair } from '../actions'
 import { LeadsPainel, type LeadPainel } from './leads-painel'
 import { TesteAssistente } from './teste-assistente'
@@ -24,12 +24,12 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   let lista: Awaited<ReturnType<typeof listarLeads>> = null
   let resumo: Awaited<ReturnType<typeof resumoLeads>> = null
-  let erroBanco = false
+  let erroBanco: ReturnType<typeof explicarErroBanco> | null = null
   try {
     ;[lista, resumo] = await Promise.all([listarLeads({ filtro, busca }), resumoLeads()])
   } catch (error) {
     console.error('[equipe] Falha ao ler o banco:', error)
-    erroBanco = true
+    erroBanco = explicarErroBanco(error)
   }
 
   const leads: LeadPainel[] | null = lista
@@ -85,9 +85,14 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
             </h2>
             <p className="text-sm text-muted-foreground">
               {erroBanco
-                ? 'Confira a DATABASE_URL na Vercel (use a URL do pooler, porta 6543) e se o db/setup.sql foi rodado no Supabase.'
+                ? erroBanco.dica
                 : 'Crie o projeto grátis no Supabase, rode o db/setup.sql e cadastre DATABASE_URL na Vercel. Passo a passo em docs/banco-de-dados.md.'}
             </p>
+            {erroBanco && (
+              <p className="break-words rounded-xl bg-foreground/[0.04] p-3 font-mono text-xs text-muted-foreground">
+                Erro: {erroBanco.codigo} {erroBanco.mensagem}
+              </p>
+            )}
           </div>
         ) : (
           <LeadsPainel

@@ -126,3 +126,30 @@ export async function importarLeads(lista: { nome: string; whatsapp: string; cri
   }
   return { novos, existentes: lista.length - novos }
 }
+
+/** Traduz o erro de conexão/consulta do Postgres para algo que a equipe consiga resolver. */
+export function explicarErroBanco(error: unknown) {
+  const causa = (error as { cause?: unknown })?.cause ?? error
+  const codigo = String((causa as { code?: string })?.code ?? '')
+  // Nunca mostra a senha: mascara qualquer usuario:senha@ que venha na mensagem.
+  const mensagem = String((causa as Error)?.message ?? causa)
+    .replace(/\/\/[^@\s/]+@/g, '//***@')
+    .slice(0, 200)
+  const texto = `${codigo} ${mensagem}`
+
+  let dica = 'Confira a DATABASE_URL na Vercel (URL do Transaction pooler, porta 6543) e faça Redeploy.'
+  if (/28P01|password authentication failed/i.test(texto))
+    dica = 'Senha do banco errada na DATABASE_URL. Troque [YOUR-PASSWORD] pela senha do projeto (com & ou + codificados como %26 e %2B) ou redefina a senha em Supabase → Project Settings → Database.'
+  else if (/42P01|does not exist/i.test(texto))
+    dica = 'A conexão funcionou, mas as tabelas não existem: rode o db/setup.sql no Supabase → SQL Editor.'
+  else if (/tenant or user not found/i.test(texto))
+    dica = 'Usuário errado para o pooler: na URL do Transaction pooler o usuário é postgres.<id-do-projeto>, não só postgres. Copie a URL de novo em Connect → Transaction pooler.'
+  else if (/ENOTFOUND|EAI_AGAIN|getaddrinfo/i.test(texto))
+    dica = 'Endereço do banco não encontrado. A DATABASE_URL está incompleta ou é a "Direct connection" (db.xxx.supabase.co, só IPv6). Use a URL do Transaction pooler (…pooler.supabase.com:6543).'
+  else if (/ECONNREFUSED|ETIMEDOUT|CONNECT_TIMEOUT|ENETUNREACH|timeout/i.test(texto))
+    dica = 'O banco não respondeu. Verifique se o projeto não está pausado (Supabase → Restore project) e se a URL é a do Transaction pooler (porta 6543).'
+  else if (/Invalid URL|ERR_INVALID_URL|invalid connection string/i.test(texto))
+    dica = 'A DATABASE_URL não é uma URL válida. Ela começa com postgresql:// e não pode ter espaços ou aspas.'
+
+  return { codigo, mensagem, dica }
+}

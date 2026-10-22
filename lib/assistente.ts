@@ -31,7 +31,6 @@ export const LIMITE_CARACTERES = 1000
  * sempre aponta para o Flash mais novo. O primeiro que funcionar fica guardado até a instância reiniciar.
  */
 const MODELOS_PADRAO = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-flash-lite-latest', 'gemini-3.5-flash-lite']
-const TIMEOUT_MS = 25000
 
 export class AssistenteIndisponivel extends Error {}
 
@@ -107,78 +106,111 @@ export function limparHistorico(entrada: unknown): MensagemChat[] {
   return inicio === -1 ? [] : validas.slice(inicio)
 }
 
-export type Diagnostico = { ok: boolean; modelo: string | null; status?: number; erro?: string }
+export type Tentativa = { modelo: string; ok: boolean; status?: number; erro?: string; ms: number }
+export type Diagnostico = { ok: boolean; modelo: string | null; status?: number; erro?: string; tentativas: Tentativa[] }
 
 /** Gera a resposta do assistente. Lança AssistenteIndisponivel sem chave ou se o Gemini falhar. */
 export async function gerarResposta(historico: MensagemChat[], canal: Canal): Promise<string> {
   const resultado = await chamarGemini(historico, canal)
-  if (!resultado.ok) throw new AssistenteIndisponivel(`Gemini (${resultado.modelo ?? 'sem modelo'}): ${resultado.erro}`)
+  if (!resultado.ok) {
+    const resumo = resultado.tentativas.map((t) => `${t.modelo}: ${t.status ?? ''} ${t.erro}`).join(' | ')
+    throw new AssistenteIndisponivel(`Gemini falhou (${resumo || resultado.erro})`)
+  }
   return resultado.texto
 }
 
-/** Teste rápido para o painel da equipe: mostra o erro real do Google, se houver. */
+/** Teste rápido para o painel da equipe: mostra o resultado de cada modelo tentado. */
 export async function testarAssistente(): Promise<Diagnostico> {
   const resultado = await chamarGemini([{ role: 'user', content: 'Responda só: ok' }], 'site')
-  return resultado.ok ? { ok: true, modelo: resultado.modelo } : resultado
+  const { ok, modelo, tentativas } = resultado
+  return resultado.ok ? { ok, modelo, tentativas } : { ok, modelo, tentativas, status: resultado.status, erro: resultado.erro }
 }
 
-type Resultado = { ok: true; texto: string; modelo: string } | { ok: false; modelo: string | null; status?: number; erro: string }
+type Resultado =
+  | { ok: true; texto: string; modelo: string; tentativas: Tentativa[] }
+  | { ok: false; modelo: string | null; status?: number; erro: string; tentativas: Tentativa[] }
+
+/** Tempo por modelo e tempo total (a rota do chat tem 60 s na Vercel). */
+const TIMEOUT_POR_MODELO_MS = 12000
+const PRAZO_TOTAL_MS = 40000
 
 async function chamarGemini(historico: MensagemChat[], canal: Canal): Promise<Resultado> {
+  const tentativas: Tentativa[] = []
   const nome = variavelDaChave()
-  if (!nome) return { ok: false, modelo: null, erro: 'Nenhuma chave configurada (GEMINI_API_KEY) nesta implantação.' }
+  if (!nome) return { ok: false, modelo: null, erro: 'Nenhuma chave configurada (GEMINI_API_KEY) nesta implantação.', tentativas }
   const chave = process.env[nome]!.trim()
 
   // ASSISTENTE_API_BASE só existe para testes locais (servidor falso); em produção fica vazio.
   const base = process.env.ASSISTENTE_API_BASE || 'https://generativelanguage.googleapis.com'
-  const corpo = JSON.stringify({
+  const corpoBase = {
     systemInstruction: { parts: [{ text: instrucoes(canal) }] },
     contents: historico.map((mensagem) => ({
       role: mensagem.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: mensagem.content }],
     })),
-    // Sem thinkingConfig: os modelos 3.x recusam o formato antigo. O limite é folgado porque o
-    // "raciocínio" interno desses modelos também conta nos tokens de saída.
-    generationConfig: { temperature: 0.4, maxOutputTokens: 2048 },
+  }
+  // Raciocínio "low" deixa os modelos 3.x bem mais rápidos. Se o modelo recusar o campo, repete sem ele.
+  // O limite é folgado porque o raciocínio interno também conta nos tokens de saída.
+  const comRaciocinioBaixo = JSON.stringify({
+    ...corpoBase,
+    generationConfig: { temperature: 0.4, maxOutputTokens: 2048, thinkingConfig: { thinkingLevel: 'low' } },
   })
+  const semRaciocinio = JSON.stringify({ ...corpoBase, generationConfig: { temperature: 0.4, maxOutputTokens: 2048 } })
 
-  let ultimo: Resultado = { ok: false, modelo: null, erro: 'Nenhum modelo disponível.' }
+  const inicio = Date.now()
   for (const modelo of modelosParaTentar()) {
-    let resposta: Response
-    try {
-      resposta = await fetch(`${base}/v1beta/models/${encodeURIComponent(modelo)}:generateContent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': chave },
-        body: corpo,
-        cache: 'no-store',
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      })
-    } catch (error) {
-      return { ok: false, modelo, erro: `Falha de rede com o Gemini: ${String(error)}` }
-    }
+    let corpo = comRaciocinioBaixo
+    for (let repeticao = 0; repeticao < 2; repeticao++) {
+      const restante = PRAZO_TOTAL_MS - (Date.now() - inicio)
+      if (restante < 2000) break
+      const t0 = Date.now()
+      let resposta: Response
+      try {
+        resposta = await fetch(`${base}/v1beta/models/${encodeURIComponent(modelo)}:generateContent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': chave },
+          body: corpo,
+          cache: 'no-store',
+          signal: AbortSignal.timeout(Math.min(TIMEOUT_POR_MODELO_MS, restante)),
+        })
+      } catch (error) {
+        const timeout = error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')
+        tentativas.push({ modelo, ok: false, erro: timeout ? 'demorou demais (timeout)' : `falha de rede: ${String(error)}`, ms: Date.now() - t0 })
+        break // tenta o próximo modelo
+      }
 
-    const dados = await resposta.json().catch(() => null)
-    if (!resposta.ok) {
-      const mensagem = String(dados?.error?.message ?? JSON.stringify(dados)).slice(0, 300)
-      ultimo = { ok: false, modelo, status: resposta.status, erro: mensagem }
-      // 404 = modelo desligado/indisponível: tenta o próximo. Outros erros (chave, cota) valem para todos.
-      if (resposta.status === 404) continue
-      return ultimo
-    }
+      const dados = await resposta.json().catch(() => null)
+      if (!resposta.ok) {
+        const mensagem = String(dados?.error?.message ?? JSON.stringify(dados)).slice(0, 300)
+        tentativas.push({ modelo, ok: false, status: resposta.status, erro: mensagem, ms: Date.now() - t0 })
+        if (resposta.status === 400 && /thinking/i.test(mensagem) && corpo !== semRaciocinio) {
+          corpo = semRaciocinio
+          continue // mesmo modelo, sem o ajuste de raciocínio
+        }
+        // Chave inválida, sem permissão ou cota esgotada valem para todos os modelos: para aqui.
+        if ([400, 401, 403, 429].includes(resposta.status)) {
+          return { ok: false, modelo, status: resposta.status, erro: mensagem, tentativas }
+        }
+        break // 404 (modelo desligado), 5xx (instável): tenta o próximo
+      }
 
-    modeloQueFunciona = modelo
-    const texto: string = (dados?.candidates?.[0]?.content?.parts ?? [])
-      .filter((parte: { thought?: boolean }) => !parte.thought)
-      .map((parte: { text?: string }) => parte.text ?? '')
-      .join('')
-      .trim()
-    return {
-      ok: true,
-      modelo,
-      texto:
-        texto ||
-        `Não consegui responder isso agora. Se quiser, fale com a gente na comunidade do WhatsApp: ${WHATSAPP_COMMUNITY_URL}`,
+      modeloQueFunciona = modelo
+      tentativas.push({ modelo, ok: true, ms: Date.now() - t0 })
+      const texto: string = (dados?.candidates?.[0]?.content?.parts ?? [])
+        .filter((parte: { thought?: boolean }) => !parte.thought)
+        .map((parte: { text?: string }) => parte.text ?? '')
+        .join('')
+        .trim()
+      return {
+        ok: true,
+        modelo,
+        tentativas,
+        texto:
+          texto ||
+          `Não consegui responder isso agora. Se quiser, fale com a gente na comunidade do WhatsApp: ${WHATSAPP_COMMUNITY_URL}`,
+      }
     }
   }
-  return ultimo
+  const ultima = tentativas.at(-1)
+  return { ok: false, modelo: ultima?.modelo ?? null, status: ultima?.status, erro: ultima?.erro ?? 'Nenhum modelo respondeu.', tentativas }
 }
