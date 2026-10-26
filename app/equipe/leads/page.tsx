@@ -7,6 +7,7 @@ import { explicarErroBanco, type FiltroLeads, listarLeads, resumoLeads } from '@
 import { sair } from '../actions'
 import { LeadsPainel, type LeadPainel } from './leads-painel'
 import { TesteAssistente } from './teste-assistente'
+import { TestePlanilha } from './teste-planilha'
 
 const FILTROS: { id: FiltroLeads; rotulo: string }[] = [
   { id: 'nao-convertidos', rotulo: 'Ainda não converteu' },
@@ -76,6 +77,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         </p>
 
         <TesteAssistente />
+        <TestePlanilha />
 
         {!leads ? (
           <div className="glass mt-6 flex flex-col gap-3 rounded-3xl p-6">

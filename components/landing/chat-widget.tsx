@@ -3,7 +3,7 @@
 import { Bot, Loader2, MessageCircle, SendHorizontal, X } from 'lucide-react'
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import { waLink } from '@/lib/phone'
-import { SITE_URL, WHATSAPP_ATENDIMENTO, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
+import { CADASTRO_PATH, REFERRAL_CODE, SITE_URL, WHATSAPP_ATENDIMENTO, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 type Mensagem = { role: 'user' | 'assistant'; content: string; erro?: boolean }
@@ -16,6 +16,23 @@ const SUGESTOES = ['Tutorial completo', 'Como me cadastro?', 'Quanto paga por ho
 
 const BOAS_VINDAS =
   'Oi! Sou o assistente do **Hub Capture** 👋 Tiro dúvidas sobre cadastro com o código VEMHUB, gravações, pagamentos e o app Minute. Como posso ajudar?'
+
+const CHAVE_ACEITE = 'hubcapture:chat-aceite'
+
+/** Aceite do aviso (assistente aberto a todos; atendimento humano só para quem usa o VEMHUB). */
+function lerAceite() {
+  try {
+    return localStorage.getItem(CHAVE_ACEITE) === '1'
+  } catch {
+    return true
+  }
+}
+
+function salvarAceite() {
+  try {
+    localStorage.setItem(CHAVE_ACEITE, '1')
+  } catch {}
+}
 
 function lerConversa(): Mensagem[] {
   try {
@@ -38,6 +55,7 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
   const [mensagens, setMensagens] = useState<Mensagem[]>([])
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [aceitou, setAceitou] = useState(true)
   const painelId = useId()
   const botaoRef = useRef<HTMLButtonElement>(null)
   const entradaRef = useRef<HTMLTextAreaElement>(null)
@@ -45,6 +63,7 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
 
   useEffect(() => {
     setMensagens(lerConversa())
+    setAceitou(lerAceite())
   }, [])
 
   useEffect(() => {
@@ -69,7 +88,7 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
 
   async function enviar(conteudo: string) {
     const pergunta = conteudo.trim().slice(0, MAX_CARACTERES)
-    if (!pergunta || enviando) return
+    if (!pergunta || enviando || !aceitou) return
     const comPergunta: Mensagem[] = [...mensagens, { role: 'user', content: pergunta }]
     setMensagens(comPergunta)
     salvarConversa(comPergunta)
@@ -179,7 +198,31 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
               )}
             </ul>
 
-            {mensagens.length === 0 && !enviando && (
+            {!aceitou && (
+              <div className="mt-4 rounded-2xl border border-primary/35 bg-primary/10 p-4 text-sm leading-relaxed">
+                <p>
+                  O assistente é aberto a todos. <strong>Atendimento humano</strong>, suporte no WhatsApp e promoções
+                  são exclusivos para quem se cadastra com o código{' '}
+                  <a href={CADASTRO_PATH} data-interno="" className="font-semibold text-primary underline underline-offset-2">
+                    {REFERRAL_CODE}
+                  </a>
+                  .
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    salvarAceite()
+                    setAceitou(true)
+                    entradaRef.current?.focus()
+                  }}
+                  className="mt-3 inline-flex h-10 w-full items-center justify-center rounded-full bg-primary px-4 font-medium text-primary-foreground transition-all hover:brightness-110"
+                >
+                  Entendi e aceito
+                </button>
+              </div>
+            )}
+
+            {aceitou && mensagens.length === 0 && !enviando && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {SUGESTOES.map((sugestao) => (
                   <button
@@ -212,12 +255,13 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
               onChange={(event) => setTexto(event.target.value.slice(0, MAX_CARACTERES))}
               onKeyDown={aoTeclarEntrada}
               rows={1}
-              placeholder="Escreva sua dúvida…"
+              placeholder={aceitou ? 'Escreva sua dúvida…' : 'Aceite acima para conversar'}
+              disabled={!aceitou}
               className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-background/60 px-4 py-2.5 text-base leading-snug text-foreground placeholder:text-muted-foreground/70 outline-none field-sizing-content focus-visible:border-primary"
             />
             <button
               type="submit"
-              disabled={enviando || !texto.trim()}
+              disabled={!aceitou || enviando || !texto.trim()}
               aria-label="Enviar"
               className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:brightness-110 disabled:opacity-50"
             >
