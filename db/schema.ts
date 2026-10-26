@@ -166,3 +166,49 @@ export const mensagensAuto = pgTable(
   },
   (tabela) => [unique('mensagens_auto_lead_etapa').on(tabela.leadId, tabela.etapa)],
 )
+
+/**
+ * Central de atendimento: uma conversa por pessoa e canal (chat do site ou WhatsApp).
+ * status: bot (o assistente responde) | aguardando (pediu humano) | humano (a equipe assumiu) | resolvida.
+ */
+export const atendimentos = pgTable(
+  'atendimentos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    canal: text('canal').notNull(),
+    /** WhatsApp: número só com dígitos. Site: hash do código secreto do visitante (nunca o código em si). */
+    contato: text('contato').notNull(),
+    nome: text('nome'),
+    leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+    status: text('status').notNull().default('bot'),
+    atendenteId: uuid('atendente_id'),
+    atendenteNome: text('atendente_nome'),
+    naoLidas: integer('nao_lidas').notNull().default(0),
+    ultimaMensagem: text('ultima_mensagem'),
+    ultimaMensagemEm: timestamp('ultima_mensagem_em', { withTimezone: true }).notNull().defaultNow(),
+    /** Última mensagem DA PESSOA: no WhatsApp, só dá para responder grátis até 24 h depois dela. */
+    ultimaDoClienteEm: timestamp('ultima_do_cliente_em', { withTimezone: true }),
+    criadoEm: timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (tabela) => [unique('atendimentos_canal_contato').on(tabela.canal, tabela.contato), index('atendimentos_ultima_idx').on(tabela.ultimaMensagemEm)],
+)
+
+/** Mensagens das conversas. autor: cliente | bot | atendente | sistema. */
+export const mensagensAtendimento = pgTable(
+  'mensagens_atendimento',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    atendimentoId: uuid('atendimento_id')
+      .notNull()
+      .references(() => atendimentos.id, { onDelete: 'cascade' }),
+    autor: text('autor').notNull(),
+    autorNome: text('autor_nome'),
+    texto: text('texto').notNull(),
+    /** Chave de idempotência das respostas da equipe: o mesmo envio nunca sai duas vezes. */
+    chave: text('chave'),
+    wamid: text('wamid'),
+    erro: text('erro'),
+    criadoEm: timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (tabela) => [index('mensagens_atendimento_idx').on(tabela.atendimentoId, tabela.criadoEm), unique('mensagens_atendimento_chave').on(tabela.atendimentoId, tabela.chave)],
+)

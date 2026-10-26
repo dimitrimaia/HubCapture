@@ -47,14 +47,29 @@ function doPost(e) {
     const tipo = COLUNAS[dados.tipo] ? dados.tipo : 'colab'
     const planilha = SpreadsheetApp.getActiveSpreadsheet()
     const aba = planilha.getSheetByName(ABAS[tipo]) || planilha.insertSheet(ABAS[tipo])
-    if (aba.getLastRow() === 0) aba.appendRow(COLUNAS[tipo])
-    aba.appendRow(COLUNAS[tipo].map((coluna) => dados[coluna] ?? ''))
+    const cabecalho = garantirCabecalho(aba, COLUNAS[tipo])
+    // Grava cada valor na coluna com o MESMO NOME: colunas criadas por você ficam em branco, nada desalinha.
+    aba.appendRow(cabecalho.map((coluna) => dados[coluna] ?? ''))
     return resposta({ ok: true })
   } catch (erro) {
     return resposta({ ok: false, erro: String(erro) })
   } finally {
     lock.releaseLock()
   }
+}
+
+// Cria o cabeçalho na aba vazia ou acrescenta no FIM as colunas que ainda não existem.
+// Você pode reordenar, renomear as suas ou criar colunas extras: o script sempre procura pelo nome.
+function garantirCabecalho(aba, colunas) {
+  if (aba.getLastRow() === 0) {
+    aba.appendRow(colunas)
+    return colunas.slice()
+  }
+  const largura = Math.max(aba.getLastColumn(), 1)
+  const atual = aba.getRange(1, 1, 1, largura).getValues()[0].map((v) => String(v).trim())
+  const faltando = colunas.filter((c) => atual.indexOf(c) === -1)
+  if (faltando.length) aba.getRange(1, largura + 1, 1, faltando.length).setValues([faltando])
+  return atual.concat(faltando)
 }
 
 // Sem token: {"ok":true,"status":"online"} (teste no navegador).
@@ -95,8 +110,9 @@ Na **planilha de influencers**, troque `ABAS_LEITURA` para `['Colab']`, crie o `
 mesmo valor em `INFLUENCER_LEITURA_TOKEN` na Vercel (sem essa variável, o site tenta o `PLANILHA_LEITURA_TOKEN`).
 Assim o botão **Importar planilha** da aba Colab do painel funciona.
 
-Colunas novas na aba Cadastro: se ela já existe, escreva na primeira linha, a partir da coluna E:
-`consentimento`, `utm_source`, `utm_medium`, `utm_campaign`, `ref` (de onde a pessoa veio, ver docs/painel.md).
+**Colunas novas aparecem sozinhas**: o script grava pelo NOME da coluna (linha 1). Se faltar alguma (ex.:
+`consentimento`, `utm_source`, `ref`), ele acrescenta no fim do cabeçalho no próximo envio. Colunas que você criou
+por conta própria continuam lá, em branco para o site, e nada fica desalinhado.
 A coluna `consentimento` fica `TRUE` quando a pessoa marcou "Aceito receber mensagens no WhatsApp".
 
 O token fica só no Apps Script e na Vercel, nunca no código. Sem ele, a URL `/exec` não devolve nenhum dado.

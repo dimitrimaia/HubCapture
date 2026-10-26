@@ -1,12 +1,15 @@
 'use client'
 
-import { Bot, Loader2, MessageCircle, SendHorizontal, X } from 'lucide-react'
+import { Bot, Headset, Loader2, MessageCircle, SendHorizontal, X } from 'lucide-react'
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
+import { lerCadastroLocal } from '@/lib/cadastro-local'
 import { waLink } from '@/lib/phone'
 import { CADASTRO_PATH, REFERRAL_CODE, SITE_URL, WHATSAPP_ATENDIMENTO, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
-type Mensagem = { role: 'user' | 'assistant'; content: string; erro?: boolean }
+/** `autor`: nome de quem da equipe respondeu (vazio = assistente). `id`: mensagem vinda do servidor. */
+type Mensagem = { role: 'user' | 'assistant'; content: string; erro?: boolean; autor?: string; id?: string }
+type Modo = 'bot' | 'aguardando' | 'humano'
 
 const CHAVE = 'hubcapture:chat'
 const MAX_HISTORICO = 20
@@ -18,6 +21,37 @@ const BOAS_VINDAS =
   'Oi! Sou o assistente do **Hub Capture** 👋 Tiro dúvidas sobre cadastro com o código VEMHUB, gravações, pagamentos e o app Minute. Como posso ajudar?'
 
 const CHAVE_ACEITE = 'hubcapture:chat-aceite'
+const CHAVE_VISITANTE = 'hubcapture:visitante'
+const CHAVE_MODO = 'hubcapture:chat-modo'
+const PEDIR_HUMANO = 'Quero falar com uma pessoa'
+
+/** Código secreto e aleatório deste navegador: liga as mensagens à mesma conversa na central de atendimento. */
+function codigoVisitante() {
+  try {
+    let codigo = localStorage.getItem(CHAVE_VISITANTE)
+    if (!codigo) {
+      codigo = crypto.randomUUID()
+      localStorage.setItem(CHAVE_VISITANTE, codigo)
+    }
+    return codigo
+  } catch {
+    return undefined
+  }
+}
+
+function lerModo(): { modo: Modo; desde: string } {
+  try {
+    const dados = JSON.parse(sessionStorage.getItem(CHAVE_MODO) ?? 'null')
+    if (dados?.modo) return dados
+  } catch {}
+  return { modo: 'bot', desde: new Date().toISOString() }
+}
+
+function salvarModo(dados: { modo: Modo; desde: string }) {
+  try {
+    sessionStorage.setItem(CHAVE_MODO, JSON.stringify(dados))
+  } catch {}
+}
 
 /** Aceite do aviso (assistente aberto a todos; atendimento humano só para quem usa o VEMHUB). */
 function lerAceite() {
@@ -56,6 +90,9 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [aceitou, setAceitou] = useState(true)
+  const [modo, setModo] = useState<{ modo: Modo; desde: string; atendente?: string | null }>({ modo: 'bot', desde: '' })
+  const [novas, setNovas] = useState(0)
+  const [temCadastro, setTemCadastro] = useState(false)
   const painelId = useId()
   const botaoRef = useRef<HTMLButtonElement>(null)
   const entradaRef = useRef<HTMLTextAreaElement>(null)
@@ -64,7 +101,54 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
   useEffect(() => {
     setMensagens(lerConversa())
     setAceitou(lerAceite())
+    setModo(lerModo())
+    setTemCadastro(Boolean(lerCadastroLocal()))
   }, [])
+
+  function mudarModo(novo: Modo, atendente?: string | null) {
+    setModo((atual) => {
+      const dados = { modo: novo, desde: atual.modo === novo && atual.desde ? atual.desde : new Date(Date.now() - 5000).toISOString(), atendente }
+      salvarModo(dados)
+      return dados
+    })
+  }
+
+  // Com uma pessoa da equipe na conversa: busca as respostas dela (a cada 4 s aberto, 20 s fechado).
+  useEffect(() => {
+    if (modo.modo === 'bot' || !modo.desde) return
+    const visitante = codigoVisitante()
+    if (!visitante) return
+    let parado = false
+    async function buscar() {
+      const r = await fetch(`/api/chat/mensagens?visitante=${visitante}&depois=${encodeURIComponent(modo.desde)}`, { cache: 'no-store' }).catch(() => null)
+      const dados = await r?.json().catch(() => null)
+      if (parado || !dados?.ok) return
+      if (dados.mensagens?.length) {
+        setMensagens((atual) => {
+          const vistos = new Set(atual.map((m) => m.id).filter(Boolean))
+          const chegaram = (dados.mensagens as { id: string; autorNome: string | null; texto: string }[]).filter((m) => !vistos.has(m.id))
+          if (!chegaram.length) return atual
+          if (!aberto) setNovas((n) => n + chegaram.length)
+          const final = [...atual, ...chegaram.map((m) => ({ role: 'assistant' as const, content: m.texto, autor: m.autorNome ?? 'Equipe', id: m.id }))]
+          salvarConversa(final)
+          return final
+        })
+      }
+      if (dados.status === 'bot' || dados.status === 'resolvida') mudarModo('bot')
+      else if (dados.status !== modo.modo || dados.atendente !== modo.atendente) mudarModo(dados.status, dados.atendente)
+    }
+    buscar()
+    const intervalo = setInterval(() => document.visibilityState === 'visible' && buscar(), aberto ? 4000 : 20000)
+    return () => {
+      parado = true
+      clearInterval(intervalo)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modo.modo, modo.desde, modo.atendente, aberto])
+
+  useEffect(() => {
+    if (aberto) setNovas(0)
+  }, [aberto])
 
   useEffect(() => {
     if (aberto) entradaRef.current?.focus()
@@ -95,7 +179,7 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
     setTexto('')
     setEnviando(true)
 
-    let resposta: Mensagem
+    let resposta: Mensagem | null
     try {
       const historico = comPergunta
         .filter((mensagem) => !mensagem.erro)
@@ -104,17 +188,22 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: historico }),
+        body: JSON.stringify({ messages: historico, visitante: codigoVisitante(), cadastro: lerCadastroLocal()?.id ?? undefined }),
       })
       const dados = await response.json().catch(() => ({}))
-      resposta = response.ok
-        ? { role: 'assistant', content: String(dados.resposta) }
-        : { role: 'assistant', content: textoErro(response.status, dados.erro), erro: true }
+      if (response.ok && dados.modo && dados.modo !== 'bot') mudarModo(dados.modo, dados.atendente)
+      else if (response.ok && dados.modo === 'bot' && modo.modo !== 'bot') mudarModo('bot')
+      resposta = !response.ok
+        ? { role: 'assistant', content: textoErro(response.status, dados.erro), erro: true }
+        : dados.resposta
+          ? { role: 'assistant', content: String(dados.resposta) }
+          : null
     } catch {
       resposta = { role: 'assistant', content: textoErro(0), erro: true }
     }
 
-    const final = [...comPergunta, resposta]
+    // Com uma pessoa da equipe, a resposta chega depois (sem balão do assistente agora).
+    const final = resposta ? [...comPergunta, resposta] : comPergunta
     setMensagens(final)
     salvarConversa(final)
     setEnviando(false)
@@ -144,6 +233,11 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
         )}
       >
         {aberto ? <X className="size-6" aria-hidden="true" /> : <MessageCircle className="size-6" aria-hidden="true" />}
+        {!aberto && novas > 0 && (
+          <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-white" aria-label={`${novas} respostas novas`}>
+            {novas}
+          </span>
+        )}
       </button>
 
       {aberto && (
@@ -159,8 +253,10 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
               <Bot className="size-5" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold leading-tight">Assistente Hub Capture</p>
-              <p className="truncate text-xs text-muted-foreground">Automático · não é a Hub Data</p>
+              <p className="font-semibold leading-tight">{modo.modo === 'humano' && modo.atendente ? modo.atendente : 'Assistente Hub Capture'}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {modo.modo === 'humano' ? 'Atendimento da equipe Hub Capture' : modo.modo === 'aguardando' ? 'Aguardando uma pessoa da equipe…' : 'Automático · não é a Hub Data'}
+              </p>
             </div>
             <button
               type="button"
@@ -188,9 +284,14 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
             <ul className="flex flex-col gap-3">
               <Balao role="assistant" content={BOAS_VINDAS} />
               {mensagens.map((mensagem, i) => (
-                <Balao key={i} {...mensagem} />
+                <Balao key={mensagem.id ?? i} {...mensagem} />
               ))}
-              {enviando && (
+              {modo.modo === 'aguardando' && !enviando && (
+                <li className="self-center rounded-full bg-foreground/[0.05] px-3 py-1 text-center text-xs text-muted-foreground">
+                  Você está na fila. Uma pessoa da equipe responde aqui assim que possível.
+                </li>
+              )}
+              {enviando && modo.modo === 'bot' && (
                 <li className="flex items-center gap-2 self-start rounded-2xl rounded-bl-md bg-foreground/[0.06] px-4 py-2.5 text-sm text-muted-foreground">
                   <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
                   digitando…
@@ -206,7 +307,7 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
                   <a href={CADASTRO_PATH} data-interno="" className="font-semibold text-primary underline underline-offset-2">
                     {REFERRAL_CODE}
                   </a>
-                  .
+                  . As conversas ficam salvas para o atendimento.
                 </p>
                 <button
                   type="button"
@@ -238,8 +339,19 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
             )}
           </div>
 
-          {aceitou && mensagens.length > 0 && (
+          {aceitou && mensagens.length > 0 && modo.modo === 'bot' && (
             <div className="flex gap-2 overflow-x-auto border-t border-border px-3 pt-2.5 [scrollbar-width:none]" aria-label="Sugestões">
+              {temCadastro && (
+                <button
+                  type="button"
+                  disabled={enviando}
+                  onClick={() => enviar(PEDIR_HUMANO)}
+                  className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full border border-border px-3 text-xs text-foreground transition-colors hover:bg-foreground/5 disabled:opacity-50"
+                >
+                  <Headset className="size-3.5" aria-hidden="true" />
+                  Falar com uma pessoa
+                </button>
+              )}
               {SUGESTOES.map((sugestao) => (
                 <button
                   key={sugestao}
@@ -298,7 +410,7 @@ function textoErro(status: number, erro?: string) {
   return `Não consegui responder agora. Tente de novo em instantes ou ${contato}.`
 }
 
-function Balao({ role, content, erro }: Mensagem) {
+function Balao({ role, content, erro, autor }: Mensagem) {
   const minha = role === 'user'
   return (
     <li
@@ -311,7 +423,8 @@ function Balao({ role, content, erro }: Mensagem) {
             : 'self-start rounded-bl-md bg-foreground/[0.06]',
       )}
     >
-      {minha ? <p className="whitespace-pre-wrap">{content}</p> : <Markdown texto={content} />}
+      {autor && <p className="mb-0.5 text-xs font-semibold text-primary">{autor} · equipe</p>}
+      {minha || autor ? <p className="whitespace-pre-wrap">{content}</p> : <Markdown texto={content} />}
     </li>
   )
 }
