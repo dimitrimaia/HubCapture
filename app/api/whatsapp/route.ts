@@ -1,13 +1,16 @@
 import { after } from 'next/server'
+import { registrarErro } from '@/lib/auditoria'
 import { AssistenteIndisponivel, gerarResposta, limparHistorico } from '@/lib/assistente'
 import { marcarRespondeuWhatsapp } from '@/lib/leads'
 import { variantesE164 } from '@/lib/phone'
 import { SIGNUP_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
-import { assinaturaValida, enviarTexto, lerMensagens, marcarComoLida, type MensagemRecebida, whatsappConfigurado } from '@/lib/whatsapp'
+import { marcarOptOut } from '@/lib/lembretes'
+import { assinaturaValida, enviarTexto, lerMensagens, marcarComoLida, type MensagemRecebida, pediuParaSair, whatsappConfigurado } from '@/lib/whatsapp'
 import { carregarConversa, mensagemNova, salvarConversa } from '@/lib/whatsapp-memoria'
 
 export const maxDuration = 60
 
+const SAIU = 'Pronto, você não vai mais receber mensagens automáticas do Hub Capture. Se mudar de ideia ou tiver dúvidas, é só escrever aqui.'
 const SO_TEXTO = 'Por enquanto só consigo ler mensagens de texto 🙂 Pode escrever sua dúvida?'
 const SEM_ASSISTENTE = `Recebi sua mensagem! Agora não consigo responder automaticamente. Enquanto isso, você pode criar sua conta com o código VEMHUB: ${SIGNUP_URL} ou tirar dúvidas na comunidade: ${WHATSAPP_COMMUNITY_URL}`
 
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
         try {
           await atender(mensagem)
         } catch (error) {
-          console.error('[whatsapp] Falha ao atender', mensagem.id, error)
+          await registrarErro('whatsapp', error)
         }
       }
     })
@@ -63,6 +66,12 @@ async function atender(mensagem: MensagemRecebida) {
 
   if (!mensagem.texto) {
     await enviarTexto(mensagem.de, SO_TEXTO)
+    return
+  }
+
+  if (pediuParaSair(mensagem.texto)) {
+    await marcarOptOut(variantesE164(mensagem.de)).catch((error) => console.warn('[whatsapp] opt-out:', error))
+    await enviarTexto(mensagem.de, SAIU)
     return
   }
 

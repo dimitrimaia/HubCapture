@@ -1,4 +1,5 @@
 import { normalizeCadastroLead, validateCadastroLead } from '@/lib/cadastro'
+import { registrarErro } from '@/lib/auditoria'
 import { salvarLead } from '@/lib/leads'
 import { toE164 } from '@/lib/phone'
 import { forwardLead } from '@/lib/webhook'
@@ -25,8 +26,8 @@ export async function POST(request: Request) {
   }
 
   // Banco (painel da equipe) e planilha (cópia de segurança) em paralelo.
-  const [banco, planilha] = await Promise.allSettled([salvarLead({ nome: lead.nome, whatsapp }), forwardLead('cadastro', lead)])
-  if (banco.status === 'rejected') console.error('[leads] Falha ao salvar no banco:', banco.reason)
+  const [banco, planilha] = await Promise.allSettled([salvarLead({ nome: lead.nome, whatsapp, consentimento: lead.consentimento }), forwardLead('cadastro', lead)])
+  if (banco.status === 'rejected') await registrarErro('cadastro', banco.reason)
   const id = banco.status === 'fulfilled' ? banco.value : null
   const salvouPlanilha = planilha.status === 'fulfilled' && planilha.value
 

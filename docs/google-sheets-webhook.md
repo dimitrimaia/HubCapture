@@ -9,6 +9,9 @@
 nessa planilha e ficam apenas nos logs). Cada planilha tem seu próprio Apps Script (Extensões → Apps Script dentro dela)
 com o código abaixo; o script grava cada envio na aba do seu `tipo`.
 
+Para testar sem adivinhar: painel → **Saúde do sistema → Testar planilha** mostra se a URL responde, se o token
+confere e quantas linhas vieram.
+
 O site envia os leads pelo servidor (`lib/webhook.ts`) para um Google Apps Script, que grava na planilha.
 Cada envio tem o campo `tipo`:
 
@@ -18,7 +21,7 @@ Cada envio tem o campo `tipo`:
 - `colab`: formulário de influencers (aba **Colab**).
 
 Com o banco de dados configurado (`docs/banco-de-dados.md`), a planilha vira **cópia de segurança**: o painel
-`/equipe/leads` lê do banco. O botão **Importar da planilha** traz para o banco quem já está na aba Cadastro,
+`/equipe/leads` (e `/equipe/colab`) lê do banco. O botão **Importar da planilha** traz para o banco quem já está na aba Cadastro,
 usando o `doGet` com token abaixo.
 
 ## 1. Código do Apps Script
@@ -28,11 +31,12 @@ Na planilha: **Extensões → Apps Script**. Apague o conteúdo do arquivo e col
 ```js
 const COLUNAS = {
   colab: ['criadoEm', 'nome', 'perfil', 'seguidores', 'email', 'whatsapp', 'consentimento', 'origem'],
-  cadastro: ['criadoEm', 'nome', 'whatsapp', 'origem'],
+  cadastro: ['criadoEm', 'nome', 'whatsapp', 'origem', 'consentimento'],
   acao: ['criadoEm', 'whatsapp', 'nome', 'acao', 'por', 'origem'],
 }
 const ABAS = { colab: 'Colab', cadastro: 'Cadastro', acao: 'Acoes' }
-// Só estas abas podem ser lidas pelo doGet (nunca a de influencers por engano).
+// Só estas abas podem ser lidas pelo doGet.
+// Planilha de cadastros: ['Cadastro']. Planilha de influencers: ['Colab'].
 const ABAS_LEITURA = ['Cadastro']
 
 function doPost(e) {
@@ -86,6 +90,13 @@ function resposta(objeto) {
    **Adicionar propriedade**: nome `TOKEN_LEITURA`, valor = uma senha longa e aleatória
    (ex.: gere em https://1password.com/password-generator, 32+ caracteres).
 2. Na Vercel, crie `PLANILHA_LEITURA_TOKEN` com **o mesmo valor**.
+
+Na **planilha de influencers**, troque `ABAS_LEITURA` para `['Colab']`, crie o `TOKEN_LEITURA` dela e coloque o
+mesmo valor em `INFLUENCER_LEITURA_TOKEN` na Vercel (sem essa variável, o site tenta o `PLANILHA_LEITURA_TOKEN`).
+Assim o botão **Importar planilha** da aba Colab do painel funciona.
+
+Coluna nova `consentimento` (cadastro): se a aba Cadastro já existe, escreva `consentimento` na primeira linha da
+coluna E. Ela fica `TRUE` quando a pessoa marcou "Aceito receber mensagens no WhatsApp".
 
 O token fica só no Apps Script e na Vercel, nunca no código. Sem ele, a URL `/exec` não devolve nenhum dado.
 

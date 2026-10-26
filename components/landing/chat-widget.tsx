@@ -238,6 +238,22 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
             )}
           </div>
 
+          {aceitou && mensagens.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto border-t border-border px-3 pt-2.5 [scrollbar-width:none]" aria-label="Sugestões">
+              {SUGESTOES.map((sugestao) => (
+                <button
+                  key={sugestao}
+                  type="button"
+                  disabled={enviando}
+                  onClick={() => enviar(sugestao)}
+                  className="h-8 shrink-0 rounded-full border border-primary/35 bg-primary/10 px-3 text-xs text-foreground transition-colors hover:bg-primary/15 disabled:opacity-50"
+                >
+                  {sugestao}
+                </button>
+              ))}
+            </div>
+          )}
+
           <form
             onSubmit={(event) => {
               event.preventDefault()

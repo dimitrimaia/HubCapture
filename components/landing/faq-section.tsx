@@ -1,8 +1,8 @@
 import { ChevronDown } from 'lucide-react'
-import { faqs } from '@/lib/site'
+import type { Pergunta } from '@/lib/conteudo'
 import { Eyebrow } from './eyebrow'
 
-export function FaqSection() {
+export function FaqSection({ faqs }: { faqs: Pergunta[] }) {
   return (
     <section id="faq" aria-labelledby="faq-title" className="scroll-mt-20 px-4 py-16 sm:px-6 md:py-24">
       <div className="mx-auto max-w-3xl">

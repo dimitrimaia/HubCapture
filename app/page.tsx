@@ -1,6 +1,7 @@
 import { CodeSection } from '@/components/landing/code-section'
 import { ColabSection } from '@/components/landing/colab-section'
 import { CommunitySection } from '@/components/landing/community-section'
+import { BlocoEditavel } from '@/components/landing/edicao'
 import { DifferenceSection } from '@/components/landing/difference-section'
 import { EarningModes } from '@/components/landing/earning-modes'
 import { FaqSection } from '@/components/landing/faq-section'
@@ -13,9 +14,14 @@ import { SeoArticle } from '@/components/landing/seo-article'
 import { SiteShell } from '@/components/landing/site-shell'
 import { Tutorial } from '@/components/landing/tutorial'
 import { TutorialsCard } from '@/components/landing/tutorials-card'
-import { APP_STORE_URL, CADASTRO_PATH, faqs, INSTAGRAM_URL, PLAY_STORE_URL, SITE_URL } from '@/lib/site'
+import { obterConfig } from '@/lib/configuracoes'
+import type { Pergunta } from '@/lib/conteudo'
+import { APP_STORE_URL, CADASTRO_PATH, INSTAGRAM_URL, PLAY_STORE_URL, SITE_URL } from '@/lib/site'
 
-const structuredData = {
+/** Estático, refeito a cada hora ou na hora em que um admin salva um bloco (revalidatePath). */
+export const revalidate = 3600
+
+const dadosEstruturados = (faqs: Pergunta[]) => ({
   '@context': 'https://schema.org',
   '@graph': [
     {
@@ -49,11 +55,27 @@ const structuredData = {
       '@type': 'HowTo',
       name: 'Como ganhar dinheiro gravando vídeos no Hub Capture (Hub Data)',
       step: [
-        { '@type': 'HowToStep', name: 'Crie sua conta com o código VEMHUB', url: `${SITE_URL}${CADASTRO_PATH}` },
-        { '@type': 'HowToStep', name: 'Peça seu Starter Kit grátis ou use o boné HubCap' },
-        { '@type': 'HowToStep', name: 'Baixe o app Hub Capture e escolha Residencial ou Comercial' },
-        { '@type': 'HowToStep', name: 'Vincule o app Minute com o mesmo e-mail para liberar tarefas extras' },
-        { '@type': 'HowToStep', name: 'Posicione o celular na cabeça, na altura dos olhos' },
+        {
+          '@type': 'HowToStep',
+          name: 'Crie sua conta com o código VEMHUB',
+          url: `${SITE_URL}${CADASTRO_PATH}`,
+        },
+        {
+          '@type': 'HowToStep',
+          name: 'Peça seu Starter Kit grátis ou use o boné HubCap',
+        },
+        {
+          '@type': 'HowToStep',
+          name: 'Baixe o app Hub Capture e escolha Residencial ou Comercial',
+        },
+        {
+          '@type': 'HowToStep',
+          name: 'Vincule o app Minute com o mesmo e-mail para liberar tarefas extras',
+        },
+        {
+          '@type': 'HowToStep',
+          name: 'Posicione o celular na cabeça, na altura dos olhos',
+        },
         { '@type': 'HowToStep', name: 'Grave a tarefa e receba via PIX' },
       ],
     },
@@ -66,28 +88,41 @@ const structuredData = {
       })),
     },
   ],
-}
+})
 
-export default function Page() {
+export default async function Page() {
+  const [hero, passos, faqs] = await Promise.all([
+    obterConfig('conteudo_hero', { fresco: true }),
+    obterConfig('tutoriais', { fresco: true }),
+    obterConfig('faq', { fresco: true }),
+  ])
   return (
     <SiteShell withModeBar>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(dadosEstruturados(faqs)).replace(/</g, '\\u003c'),
+        }}
       />
-      <Hero />
+      <BlocoEditavel bloco="conteudo_hero">
+        <Hero conteudo={hero} />
+      </BlocoEditavel>
       <HowItWorks />
-      <TutorialsCard />
+      <BlocoEditavel bloco="tutoriais">
+        <TutorialsCard passos={passos} />
+      </BlocoEditavel>
       <CodeSection />
       <ColabSection />
       <CommunitySection />
       <Tutorial />
-      <TutorialsCard className="px-4 pb-16 sm:px-6 md:pb-24" />
+      <TutorialsCard passos={passos} className="px-4 pb-16 sm:px-6 md:pb-24" />
       <HubcapSection />
       <EarningModes />
       <DifferenceSection />
       <GuidesSection />
-      <FaqSection />
+      <BlocoEditavel bloco="faq">
+        <FaqSection faqs={faqs} />
+      </BlocoEditavel>
       <SeoArticle />
       <FinalCta />
     </SiteShell>

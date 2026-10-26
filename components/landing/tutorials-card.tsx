@@ -1,11 +1,11 @@
 import { ArrowRight, CirclePlay } from 'lucide-react'
 import Link from 'next/link'
 import { TUTORIAIS_PATH } from '@/lib/site'
-import { tutorialSteps } from '@/lib/tutorials'
+import type { TutorialStep } from '@/lib/tutorials'
 import { ctaClasses } from './cta-link'
 import { Eyebrow } from './eyebrow'
 
-export function TutorialsCard({ className }: { className?: string }) {
+export function TutorialsCard({ passos: tutorialSteps, className }: { passos: TutorialStep[]; className?: string }) {
   return (
     <section aria-label="Tutoriais em vídeo" className={className ?? 'px-4 py-8 sm:px-6'}>
       <div className="relative mx-auto grid max-w-6xl gap-8 overflow-hidden rounded-3xl border border-primary/35 bg-card p-6 shadow-[0_0_60px_-20px] shadow-primary/40 sm:p-10 lg:grid-cols-[1fr_1.2fr] lg:items-center">

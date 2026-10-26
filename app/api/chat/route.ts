@@ -1,4 +1,5 @@
 import { AssistenteIndisponivel, gerarResposta, limparHistorico } from '@/lib/assistente'
+import { registrarErro } from '@/lib/auditoria'
 import { ipDoPedido } from '@/lib/ip'
 import { criarLimite } from '@/lib/limite'
 
@@ -24,7 +25,7 @@ export async function POST(request: Request) {
     const resposta = await gerarResposta(historico, 'site')
     return Response.json({ ok: true, resposta })
   } catch (error) {
-    console.error('[chat]', error)
+    await registrarErro('chat', error)
     // Sem chave ou com o Gemini fora do ar, as respostas prontas continuam funcionando; o resto vira 503.
     const status = error instanceof AssistenteIndisponivel ? 503 : 500
     return Response.json({ ok: false, erro: 'Não consegui responder agora. Tente de novo em instantes.' }, { status })

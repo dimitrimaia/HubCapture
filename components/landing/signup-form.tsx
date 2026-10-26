@@ -58,7 +58,9 @@ function DadosForm({ onEnviado }: { onEnviado: (cadastro: CadastroLocal) => void
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const honeypot = new FormData(event.currentTarget).get('website')
+    const campos = new FormData(event.currentTarget)
+    const honeypot = campos.get('website')
+    const consentimento = campos.get('consentimento') === 'on'
     const lead = normalizeCadastroLead(form)
     const validation = validateCadastroLead(lead)
     setErrors(validation)
@@ -73,7 +75,7 @@ function DadosForm({ onEnviado }: { onEnviado: (cadastro: CadastroLocal) => void
       const response = await fetch('/api/cadastro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...lead, website: honeypot ?? '' }),
+        body: JSON.stringify({ ...lead, consentimento, website: honeypot ?? '' }),
         signal: AbortSignal.timeout(SAVE_TIMEOUT_MS),
       })
       const data = await response.json().catch(() => ({}))
@@ -137,6 +139,11 @@ function DadosForm({ onEnviado }: { onEnviado: (cadastro: CadastroLocal) => void
             </p>
           )}
         </div>
+
+        <label className="flex gap-3 text-sm leading-relaxed text-muted-foreground">
+          <input type="checkbox" name="consentimento" className="mt-0.5 size-5 shrink-0 accent-primary" />
+          Aceito receber mensagens do Hub Capture no WhatsApp (dicas e lembretes; posso sair quando quiser respondendo SAIR).
+        </label>
 
         {/* Honeypot anti-spam: invisível para pessoas */}
         <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />

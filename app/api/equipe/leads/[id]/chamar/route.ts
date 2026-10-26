@@ -1,6 +1,5 @@
 import { exigirSessaoApi } from '@/lib/equipe'
 import { marcarChamado } from '@/lib/leads'
-import { MODELOS_CHAMADA } from '@/lib/mensagens'
 import { forwardLead } from '@/lib/webhook'
 
 export async function POST(request: Request, ctx: RouteContext<'/api/equipe/leads/[id]/chamar'>) {
@@ -9,7 +8,7 @@ export async function POST(request: Request, ctx: RouteContext<'/api/equipe/lead
 
   const { id } = await ctx.params
   const body = await request.json().catch(() => ({}))
-  const modelo = MODELOS_CHAMADA.some((item) => item.id === body.modelo) ? String(body.modelo) : 'outro'
+  const modelo = typeof body.modelo === 'string' && /^[a-z0-9-]{1,40}$/i.test(body.modelo) ? body.modelo : 'outro'
 
   const lead = await marcarChamado(id, sessao.nome, modelo).catch((error) => {
     console.error('[equipe] Falha ao marcar chamado:', error)

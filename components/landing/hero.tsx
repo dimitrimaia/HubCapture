@@ -2,11 +2,10 @@ import Image from 'next/image'
 import { BadgeCheck, CircleDot } from 'lucide-react'
 import { CopyCodeButton } from './copy-code-button'
 import { CtaLink } from './cta-link'
+import type { ConteudoHero } from '@/lib/conteudo'
 import { ModeSwitch } from './mode-context'
 
-const highlights = ['Cadastro gratuito', 'Starter Kit grátis', 'Saque via PIX']
-
-export function Hero() {
+export function Hero({ conteudo }: { conteudo: ConteudoHero }) {
   return (
     <section id="topo" className="relative px-4 pt-8 pb-16 sm:px-6 md:pt-14 md:pb-24">
       <div className="glass relative mx-auto grid max-w-6xl overflow-hidden rounded-3xl md:grid-cols-[1.1fr_1fr]">
@@ -21,22 +20,17 @@ export function Hero() {
           </span>
 
           <h1 className="text-balance text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            Filmou, <span className="text-primary">ganhou.</span>{' '}
-            <span className="block text-3xl sm:text-4xl lg:text-5xl">
-              Ganhe dinheiro gravando vídeos com o celular.
-            </span>
+            {conteudo.titulo} {conteudo.destaque && <span className="text-primary">{conteudo.destaque}</span>}{' '}
+            <span className="block text-3xl sm:text-4xl lg:text-5xl">{conteudo.subtitulo}</span>
           </h1>
 
           <p className="max-w-lg text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-            <ModeSwitch
-              trabalho="No app Hub Capture, da Hub Data, você grava atividades profissionais reais no seu trabalho, com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX."
-              casa="No app Hub Capture, da Hub Data, você grava tarefas do dia a dia em casa — cozinhar, organizar, lavar — com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX."
-            />
+            <ModeSwitch trabalho={conteudo.textoTrabalho} casa={conteudo.textoCasa} />
           </p>
 
           <div className="flex items-end gap-3">
             <p className="whitespace-nowrap text-5xl font-semibold tracking-tight text-primary sm:text-6xl">
-              <ModeSwitch trabalho="R$ 50" casa="R$ 35" />
+              <ModeSwitch trabalho={conteudo.valorTrabalho} casa={conteudo.valorCasa} />
               <span className="text-2xl text-primary/70 sm:text-3xl">/h</span>
             </p>
             <p className="pb-2 text-sm leading-snug text-muted-foreground">
@@ -65,7 +59,7 @@ export function Hero() {
           </div>
 
           <ul className="flex flex-wrap gap-x-5 gap-y-2">
-            {highlights.map((item) => (
+            {conteudo.destaques.map((item) => (
               <li key={item} className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <BadgeCheck className="size-4 text-primary" aria-hidden="true" />
                 {item}

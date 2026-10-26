@@ -1,6 +1,7 @@
 import { CadastroLembrete } from './cadastro-lembrete'
 import { ChatWidget } from './chat-widget'
 import { ColabProvider } from './colab-dialog'
+import { EdicaoProvider } from './edicao'
 import { ModeBar } from './mode-bar'
 import { ModeProvider } from './mode-context'
 import { SiteFooter } from './site-footer'
@@ -16,10 +17,12 @@ export function SiteShell({ children, withModeBar = false }: { children: React.R
           className="pointer-events-none fixed inset-x-0 top-0 h-[40rem] bg-[radial-gradient(ellipse_at_top,color-mix(in_oklch,var(--primary)_12%,transparent),transparent_65%)]"
         />
         <div className="relative">
-          <SiteHeader />
-          <CadastroLembrete />
-          <main>{children}</main>
-          <SiteFooter />
+          <EdicaoProvider>
+            <SiteHeader />
+            <CadastroLembrete />
+            <main>{children}</main>
+            <SiteFooter />
+          </EdicaoProvider>
         </div>
         {withModeBar && <ModeBar />}
         <ChatWidget acimaDaModeBar={withModeBar} />
