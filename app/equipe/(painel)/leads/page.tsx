@@ -1,6 +1,7 @@
 import { obterConfig } from '@/lib/configuracoes'
 import { exigirSessaoPagina } from '@/lib/equipe'
-import { explicarErroBanco, lerFiltrosLeads, paginaLeads, resumoLeads } from '@/lib/leads'
+import { etiquetasEmUso, explicarErroBanco, lerFiltrosLeads, paginaLeads, resumoLeads } from '@/lib/leads'
+import { rotuloOrigem } from '@/lib/rastreio'
 import { AvisoBanco } from '../aviso-banco'
 import { type LinhaLead, LeadsTabela } from './leads-tabela'
 
@@ -10,9 +11,10 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   let pagina: Awaited<ReturnType<typeof paginaLeads>> = null
   let resumo: Awaited<ReturnType<typeof resumoLeads>> = null
+  let etiquetas: string[] = []
   let erroBanco: ReturnType<typeof explicarErroBanco> | null = null
   try {
-    ;[pagina, resumo] = await Promise.all([paginaLeads(filtros), resumoLeads()])
+    ;[pagina, resumo, etiquetas] = await Promise.all([paginaLeads(filtros), resumoLeads(), etiquetasEmUso()])
   } catch (error) {
     console.error('[equipe] Falha ao ler o banco:', error)
     erroBanco = explicarErroBanco(error)
@@ -35,6 +37,9 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
         consentimento: lead.consentimentoWhatsapp,
         numeroInvalido: Boolean(lead.numeroInvalidoEm),
         optOut: Boolean(lead.optOutEm),
+        nota: lead.nota,
+        etiquetas: lead.etiquetas,
+        fonte: rotuloOrigem({ origem: lead.origem, utmSource: lead.utmSource ?? undefined, utmCampaign: lead.utmCampaign ?? undefined, ref: lead.ref ?? undefined }),
       }))
     : null
 
@@ -55,6 +60,7 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
           modelos={modelos}
           atendente={sessao.nome}
           podeExportar={sessao.papel === 'admin'}
+          etiquetasEmUso={etiquetas}
         />
       )}
     </>

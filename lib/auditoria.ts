@@ -1,6 +1,7 @@
 import 'server-only'
 import { and, desc, eq, gt, sql } from 'drizzle-orm'
 import { auditoria, errosSistema, getDb } from '@/db'
+import { alertarErro } from './alerta'
 
 type Ator = { id?: string | null; nome?: string | null } | null
 
@@ -22,8 +23,7 @@ export async function registrarErro(origem: string, erro: unknown) {
     .slice(0, 600)
   console.error(`[${origem}]`, erro)
   const db = getDb()
-  if (!db) return
-  await db.insert(errosSistema).values({ origem, mensagem }).catch(() => {})
+  await Promise.all([db?.insert(errosSistema).values({ origem, mensagem }).catch(() => {}), alertarErro(origem, mensagem)])
 }
 
 /** Quantas falhas de login recentes (por IP ou por usuário) para bloquear força bruta em todas as instâncias. */

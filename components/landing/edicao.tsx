@@ -2,7 +2,6 @@
 
 import { LayoutDashboard, LogOut, Pencil, ShieldCheck } from 'lucide-react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { sair } from '@/app/equipe/actions'
 import { type Bloco, BLOCOS } from '@/lib/conteudo'
@@ -24,7 +23,6 @@ const CHAVE_EDITANDO = 'hubcapture:editando'
 const EditorBloco = dynamic(() => import('./editor-blocos').then((m) => m.EditorBloco), { ssr: false })
 
 export function EdicaoProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
   const [sessao, setSessao] = useState<Sessao | null>(null)
   const [editando, setEditando] = useState(false)
   const [aberto, setAberto] = useState<Bloco | null>(null)
@@ -72,10 +70,8 @@ export function EdicaoProvider({ children }: { children: React.ReactNode }) {
         <EditorBloco
           bloco={aberto}
           onFechar={() => setAberto(null)}
-          onSalvo={() => {
-            setAberto(null)
-            router.refresh()
-          }}
+          // A Server Action já devolve a página atualizada; não precisa de router.refresh().
+          onSalvo={() => setAberto(null)}
         />
       )}
     </Contexto.Provider>

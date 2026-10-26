@@ -1,13 +1,15 @@
 'use client'
 
-import { Ban, Check, Copy, Download, Loader2, MessageCircleReply, MousePointerClick, Search, ShieldCheck, Upload, X } from 'lucide-react'
+import { Ban, Check, Copy, Loader2, MessageCircleReply, MousePointerClick, Plus, Search, ShieldCheck, Tag, Upload, X } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { WhatsappIcon } from '@/components/landing/whatsapp-icon'
 import type { FiltrosLeads } from '@/lib/leads'
+import { ETIQUETAS_SUGERIDAS, limparEtiqueta } from '@/lib/leads-tipos'
 import { type ModeloMensagem, preencherMensagem } from '@/lib/mensagens'
 import { formatE164, waLink } from '@/lib/phone'
 import { cn } from '@/lib/utils'
+import { BotaoExportar } from '../botao-exportar'
 import { BotaoIcone, dataCurta, Filtro, haQuanto, Indicadores, PainelLateral, Paginacao, Selo } from '../ui'
 
 export type LinhaLead = {
@@ -25,6 +27,10 @@ export type LinhaLead = {
   consentimento: boolean
   numeroInvalido: boolean
   optOut: boolean
+  nota: string | null
+  etiquetas: string[]
+  /** De onde veio: ref, utm_source ou origem (lib/rastreio.ts → rotuloOrigem). */
+  fonte: string
 }
 
 type Resumo = { total: number; ultimas24h: number; tocaramCadastrar: number; chamados: number; responderam: number; convertidos: number } | null
@@ -50,6 +56,8 @@ const ACOES_ROTULO: Record<string, string> = {
   desconvertido: 'Conversão desfeita',
   numero_invalido: 'Número marcado como inválido',
   numero_valido: 'Número marcado como válido',
+  nota: 'Nota',
+  etiquetas: 'Etiquetas',
 }
 
 function Situacao({ l }: { l: LinhaLead }) {
@@ -83,6 +91,7 @@ export function LeadsTabela({
   modelos,
   atendente,
   podeExportar,
+  etiquetasEmUso,
 }: {
   linhas: LinhaLead[]
   total: number
@@ -91,6 +100,7 @@ export function LeadsTabela({
   modelos: ModeloMensagem[]
   atendente: string
   podeExportar: boolean
+  etiquetasEmUso: string[]
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -125,6 +135,7 @@ export function LeadsTabela({
       origem: filtros.origem,
       periodo: filtros.periodo,
       consentiu: filtros.consentiu ? '1' : '',
+      etiqueta: filtros.etiqueta,
       q: filtros.busca,
       ordem: filtros.ordem,
       por: filtros.porPagina,
@@ -179,6 +190,17 @@ export function LeadsTabela({
     if (!(await post(`/api/equipe/leads/${l.id}/invalido`, { invalido }))) atualizar(l.id, { numeroInvalido: l.numeroInvalido })
   }
 
+  async function salvarNotas(l: LinhaLead, dados: { nota?: string; etiquetas?: string[] }) {
+    atualizar(l.id, dados)
+    const r = await fetch(`/api/equipe/leads/${l.id}/notas`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) }).catch(() => null)
+    if (!r?.ok) {
+      atualizar(l.id, { nota: l.nota, etiquetas: l.etiquetas })
+      setAviso('Não foi possível salvar a nota/etiqueta.')
+      return false
+    }
+    return true
+  }
+
   async function emLote(acao: 'convertido' | 'invalido') {
     const ids = [...selecionados]
     if (!window.confirm(`${acao === 'convertido' ? 'Marcar como convertidos' : 'Marcar número inválido'}: ${ids.length} contatos?`)) return
@@ -202,6 +224,7 @@ export function LeadsTabela({
   const exportarHref = useMemo(() => {
     const p = new URLSearchParams({ tipo: 'cadastros', situacao: filtros.situacao, origem: filtros.origem, periodo: filtros.periodo, ordem: filtros.ordem })
     if (filtros.consentiu) p.set('consentiu', '1')
+    if (filtros.etiqueta) p.set('etiqueta', filtros.etiqueta)
     if (filtros.busca) p.set('q', filtros.busca)
     return `/api/equipe/exportar?${p}`
   }, [filtros])
@@ -250,14 +273,11 @@ export function LeadsTabela({
               Importar planilha
             </button>
             {podeExportar && (
-              <a href={exportarHref} className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-foreground/5 sm:flex-none">
-                <Download className="size-4" aria-hidden="true" />
-                Exportar CSV
-              </a>
+              <BotaoExportar href={exportarHref} />
             )}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-6">
           <Filtro rotulo="Situação" valor={filtros.situacao} opcoes={SITUACOES} onChange={(v) => navegar({ situacao: v })} />
           <Filtro
             rotulo="Origem"
@@ -290,6 +310,12 @@ export function LeadsTabela({
               { valor: 'contato', rotulo: 'Último contato' },
             ]}
             onChange={(v) => navegar({ ordem: v })}
+          />
+          <Filtro
+            rotulo="Etiqueta"
+            valor={filtros.etiqueta}
+            opcoes={[{ valor: '', rotulo: 'Todas' }, ...[...new Set([...etiquetasEmUso, filtros.etiqueta].filter(Boolean))].map((e) => ({ valor: e, rotulo: e }))]}
+            onChange={(v) => navegar({ etiqueta: v })}
           />
           <label className="col-span-2 flex h-9 items-center gap-2 text-xs text-muted-foreground lg:col-span-1">
             <input type="checkbox" checked={filtros.consentiu} onChange={(e) => navegar({ consentiu: e.target.checked })} className="size-4 accent-primary" />
@@ -339,7 +365,7 @@ export function LeadsTabela({
         {linhas.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">
             Nenhum contato com esses filtros.{' '}
-            <button type="button" className="text-primary underline" onClick={() => navegar({ situacao: 'todos', origem: 'todas', periodo: 'todos', consentiu: false, q: '' })}>
+            <button type="button" className="text-primary underline" onClick={() => navegar({ situacao: 'todos', origem: 'todas', periodo: 'todos', consentiu: false, etiqueta: '', q: '' })}>
               Limpar filtros
             </button>
           </p>
@@ -397,10 +423,22 @@ export function LeadsTabela({
                         {formatE164(l.whatsapp)}
                         <span className="md:hidden"> · {dataCurta(l.criadoEm)}</span>
                       </p>
+                      {l.etiquetas.length > 0 && (
+                        <p className="mt-1 flex flex-wrap gap-1">
+                          {l.etiquetas.slice(0, 3).map((e) => (
+                            <span key={e} className="rounded-full bg-foreground/[0.06] px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                              {e}
+                            </span>
+                          ))}
+                          {l.etiquetas.length > 3 && <span className="text-[10px] text-muted-foreground">+{l.etiquetas.length - 3}</span>}
+                        </p>
+                      )}
                     </td>
                     <td className="px-2 py-2 whitespace-nowrap text-xs text-muted-foreground max-md:hidden">
                       {dataCurta(l.criadoEm)}
-                      <span className="block">{l.origem}</span>
+                      <span className="block max-w-36 truncate" title={l.fonte}>
+                        {l.fonte}
+                      </span>
                     </td>
                     <td className="px-2 py-2 max-md:order-3 max-md:p-0">
                       <Situacao l={l} />
@@ -458,6 +496,8 @@ export function LeadsTabela({
         onChamar={chamar}
         onConvertido={alternarConvertido}
         onInvalido={alternarInvalido}
+        onNotas={salvarNotas}
+        sugestoes={[...new Set([...ETIQUETAS_SUGERIDAS, ...etiquetasEmUso])]}
       />
     </div>
   )
@@ -470,6 +510,8 @@ function DetalheLead({
   onChamar,
   onConvertido,
   onInvalido,
+  onNotas,
+  sugestoes,
 }: {
   lead: LinhaLead | null
   onFechar: () => void
@@ -477,7 +519,10 @@ function DetalheLead({
   onChamar: (e: React.MouseEvent, l: LinhaLead) => void
   onConvertido: (l: LinhaLead) => void
   onInvalido: (l: LinhaLead) => void
+  onNotas: (l: LinhaLead, dados: { nota?: string; etiquetas?: string[] }) => Promise<boolean>
+  sugestoes: string[]
 }) {
+  const [versao, setVersao] = useState(0)
   const [eventos, setEventos] = useState<{ tipo: string; detalhe: string | null; por: string | null; em: string }[] | null>(null)
   const [copiado, setCopiado] = useState(false)
 
@@ -489,7 +534,7 @@ function DetalheLead({
       .then((r) => r.json())
       .then((d) => setEventos(d.eventos ?? []))
       .catch(() => setEventos([]))
-  }, [lead?.id])
+  }, [lead?.id, versao])
 
   return (
     <PainelLateral aberto={Boolean(lead)} onFechar={onFechar} titulo={lead?.nome ?? ''}>
@@ -518,7 +563,7 @@ function DetalheLead({
             <div>
               <dt className="text-xs text-muted-foreground">Cadastro</dt>
               <dd>
-                {dataCurta(lead.criadoEm)} · {lead.origem}
+                {dataCurta(lead.criadoEm)} · {lead.fonte}
               </dd>
             </div>
             <div>
@@ -553,6 +598,13 @@ function DetalheLead({
             </button>
           </div>
 
+          <NotasEtiquetas
+            key={lead.id}
+            lead={lead}
+            sugestoes={sugestoes}
+            onSalvar={async (dados) => (await onNotas(lead, dados)) && setVersao((v) => v + 1)}
+          />
+
           <section>
             <h3 className="text-sm font-semibold">Histórico</h3>
             {!eventos ? (
@@ -582,5 +634,93 @@ function DetalheLead({
         </>
       )}
     </PainelLateral>
+  )
+}
+
+function NotasEtiquetas({
+  lead,
+  sugestoes,
+  onSalvar,
+}: {
+  lead: LinhaLead
+  sugestoes: string[]
+  onSalvar: (dados: { nota?: string; etiquetas?: string[] }) => void
+}) {
+  const [nota, setNota] = useState(lead.nota ?? '')
+  const [nova, setNova] = useState('')
+  const disponiveis = sugestoes.filter((e) => !lead.etiquetas.includes(e)).slice(0, 8)
+
+  function adicionar(valor: string) {
+    const etiqueta = limparEtiqueta(valor)
+    if (!etiqueta || lead.etiquetas.includes(etiqueta) || lead.etiquetas.length >= 10) return
+    onSalvar({ etiquetas: [...lead.etiquetas, etiqueta] })
+    setNova('')
+  }
+
+  return (
+    <section className="flex flex-col gap-3">
+      <h3 className="flex items-center gap-1.5 text-sm font-semibold">
+        <Tag className="size-4" aria-hidden="true" /> Etiquetas e nota
+      </h3>
+      <ul className="flex flex-wrap gap-1.5" aria-label="Etiquetas">
+        {lead.etiquetas.map((e) => (
+          <li key={e}>
+            <button
+              type="button"
+              onClick={() => onSalvar({ etiquetas: lead.etiquetas.filter((x) => x !== e) })}
+              aria-label={`Remover etiqueta ${e}`}
+              className="inline-flex h-7 items-center gap-1 rounded-full border border-primary/40 bg-primary/12 px-2.5 text-xs"
+            >
+              {e}
+              <X className="size-3" aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+        {disponiveis.map((e) => (
+          <li key={e}>
+            <button
+              type="button"
+              onClick={() => adicionar(e)}
+              className="inline-flex h-7 items-center gap-1 rounded-full border border-dashed border-border px-2.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <Plus className="size-3" aria-hidden="true" />
+              {e}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <form
+        className="flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault()
+          adicionar(nova)
+        }}
+      >
+        <input
+          value={nova}
+          onChange={(e) => setNova(e.target.value)}
+          maxLength={30}
+          placeholder="Nova etiqueta"
+          aria-label="Nova etiqueta"
+          className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background/60 px-3 text-sm outline-none focus-visible:border-primary"
+        />
+        <button type="submit" className="h-9 rounded-lg border border-border px-3 text-sm hover:bg-foreground/5">
+          Adicionar
+        </button>
+      </form>
+      <label className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+        Nota
+        <textarea
+          value={nota}
+          onChange={(e) => setNota(e.target.value)}
+          onBlur={() => nota !== (lead.nota ?? '') && onSalvar({ nota })}
+          rows={3}
+          maxLength={2000}
+          placeholder="Ex.: pediu ajuda com o Minute, voltar a chamar sexta…"
+          className="w-full resize-y rounded-xl border border-input bg-background/60 px-3 py-2 text-sm text-foreground outline-none focus-visible:border-primary"
+        />
+        <span>Salva ao sair do campo.</span>
+      </label>
+    </section>
   )
 }

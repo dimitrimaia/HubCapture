@@ -133,3 +133,11 @@ ALTER TABLE "configuracoes" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "erros_sistema" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "colabs" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "mensagens_auto" ENABLE ROW LEVEL SECURITY;
+-- Atualização 3: etiquetas, notas e rastreio UTM.
+ALTER TABLE "leads" ADD COLUMN IF NOT EXISTS "nota" text;
+ALTER TABLE "leads" ADD COLUMN IF NOT EXISTS "etiquetas" text[] DEFAULT '{}'::text[] NOT NULL;
+ALTER TABLE "leads" ADD COLUMN IF NOT EXISTS "utm_source" text;
+ALTER TABLE "leads" ADD COLUMN IF NOT EXISTS "utm_medium" text;
+ALTER TABLE "leads" ADD COLUMN IF NOT EXISTS "utm_campaign" text;
+ALTER TABLE "leads" ADD COLUMN IF NOT EXISTS "ref" text;
+CREATE INDEX IF NOT EXISTS "leads_etiquetas_idx" ON "leads" USING gin ("etiquetas");

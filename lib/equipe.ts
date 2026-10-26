@@ -122,3 +122,33 @@ export async function exigirSessaoApi(request: Request, papel?: Papel) {
   if (!sessao || (papel === 'admin' && sessao.papel !== 'admin')) return null
   return sessao
 }
+
+/* ───────────── Liberação de exportação (pede a senha de novo; LGPD) ───────────── */
+
+const COOKIE_EXPORTAR = 'hub_exportar'
+const EXPORTAR_S = 10 * 60
+
+/** Libera exportações por 10 minutos para este usuário (cookie assinado, httpOnly). */
+export async function liberarExportacao(sessao: SessaoEquipe) {
+  const dados = Buffer.from(JSON.stringify({ u: sessao.id, e: Math.floor(Date.now() / 1000) + EXPORTAR_S })).toString('base64url')
+  ;(await cookies()).set(COOKIE_EXPORTAR, `${dados}.${assinar(`exportar:${dados}`)}`, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    path: '/api/equipe',
+    maxAge: EXPORTAR_S,
+  })
+}
+
+export async function exportacaoLiberada(sessao: SessaoEquipe) {
+  const token = (await cookies()).get(COOKIE_EXPORTAR)?.value
+  if (!token) return false
+  const [dados, assinatura] = token.split('.')
+  if (!dados || !assinatura || !iguais(assinatura, assinar(`exportar:${dados}`))) return false
+  try {
+    const { u, e } = JSON.parse(Buffer.from(dados, 'base64url').toString())
+    return u === sessao.id && typeof e === 'number' && e > Date.now() / 1000
+  } catch {
+    return false
+  }
+}

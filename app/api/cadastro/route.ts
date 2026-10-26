@@ -26,7 +26,17 @@ export async function POST(request: Request) {
   }
 
   // Banco (painel da equipe) e planilha (cópia de segurança) em paralelo.
-  const [banco, planilha] = await Promise.allSettled([salvarLead({ nome: lead.nome, whatsapp, consentimento: lead.consentimento }), forwardLead('cadastro', lead)])
+  const [banco, planilha] = await Promise.allSettled([salvarLead({ nome: lead.nome, whatsapp, consentimento: lead.consentimento, rastreio: lead.rastreio }),
+    forwardLead('cadastro', {
+      nome: lead.nome,
+      whatsapp: lead.whatsapp,
+      consentimento: lead.consentimento,
+      utm_source: lead.rastreio?.utmSource ?? '',
+      utm_medium: lead.rastreio?.utmMedium ?? '',
+      utm_campaign: lead.rastreio?.utmCampaign ?? '',
+      ref: lead.rastreio?.ref ?? '',
+    }),
+  ])
   if (banco.status === 'rejected') await registrarErro('cadastro', banco.reason)
   const id = banco.status === 'fulfilled' ? banco.value : null
   const salvouPlanilha = planilha.status === 'fulfilled' && planilha.value

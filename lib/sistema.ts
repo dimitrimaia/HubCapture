@@ -21,6 +21,8 @@ export const VARIAVEIS = [
   { nome: 'LEMBRETES_WHATSAPP', para: '"ligado" ativa os lembretes pagos' },
   { nome: 'WHATSAPP_MODELO_LEMBRETE_1', para: 'Modelo aprovado do 1º lembrete' },
   { nome: 'WHATSAPP_MODELO_LEMBRETE_2', para: 'Modelo aprovado do 2º lembrete' },
+  { nome: 'RESEND_API_KEY', para: 'Alerta de erro por e-mail (Resend, grátis)' },
+  { nome: 'ALERTA_EMAIL', para: 'E-mail que recebe os alertas' },
 ] as const
 
 export function estadoVariaveis() {

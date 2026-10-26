@@ -1,6 +1,6 @@
 import { registrarAuditoria } from '@/lib/auditoria'
 import { todosColabsFiltrados } from '@/lib/colabs'
-import { exigirSessaoApi } from '@/lib/equipe'
+import { exigirSessaoApi, exportacaoLiberada } from '@/lib/equipe'
 import { lerFiltrosLeads, todosLeadsFiltrados } from '@/lib/leads'
 import { formatE164 } from '@/lib/phone'
 
@@ -23,6 +23,8 @@ function data(valor: Date | null) {
 export async function GET(request: Request) {
   const sessao = await exigirSessaoApi(request, 'admin')
   if (!sessao) return new Response('Não autorizado', { status: 401 })
+  // Dados pessoais: exige ter confirmado a senha nos últimos 10 minutos (/api/equipe/exportar/liberar).
+  if (!(await exportacaoLiberada(sessao))) return new Response('Confirme sua senha para exportar.', { status: 403 })
   const url = new URL(request.url)
   const tipo = url.searchParams.get('tipo') === 'colab' ? 'colab' : 'cadastros'
   const hoje = new Date().toISOString().slice(0, 10)
@@ -38,7 +40,7 @@ export async function GET(request: Request) {
     const filtros = lerFiltrosLeads(Object.fromEntries(url.searchParams))
     const lista = (await todosLeadsFiltrados(filtros)) ?? []
     conteudo = csv([
-      ['Nome', 'WhatsApp', 'Cadastro em', 'Origem', 'Último botão', 'Chamadas', 'Último contato', 'Chamado por', 'Respondeu no WhatsApp', 'Aceitou mensagens', 'Convertido em', 'Número inválido', 'Pediu para sair'],
+      ['Nome', 'WhatsApp', 'Cadastro em', 'Origem', 'Último botão', 'Chamadas', 'Último contato', 'Chamado por', 'Respondeu no WhatsApp', 'Aceitou mensagens', 'Convertido em', 'Número inválido', 'Pediu para sair', 'Etiquetas', 'Nota', 'utm_source', 'utm_medium', 'utm_campaign', 'ref'],
       ...lista.map((l) => [
         l.nome,
         formatE164(l.whatsapp),
@@ -53,6 +55,12 @@ export async function GET(request: Request) {
         data(l.convertidoEm),
         data(l.numeroInvalidoEm),
         data(l.optOutEm),
+        l.etiquetas.join(', '),
+        l.nota,
+        l.utmSource,
+        l.utmMedium,
+        l.utmCampaign,
+        l.ref,
       ]),
     ])
   }

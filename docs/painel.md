@@ -52,26 +52,55 @@ desativar. O sistema não deixa ficar sem nenhum admin ativo.
 - **Cadastros**: tabela com busca, filtros (situação, origem, período, quem aceitou mensagens), ordenação,
   25/50/100 por página, seleção em lote, exportar CSV (admin) e painel de detalhes com histórico.
   Os filtros ficam na URL: dá para salvar nos favoritos ou mandar o link para alguém da equipe.
+  No painel de detalhes: **etiquetas** (rápidas, como "voltar sexta", ou livres) e **nota**. Filtre por etiqueta na tabela.
+  A coluna Cadastro mostra a **origem** (ref do influencer, utm_source ou site).
 - **Colab**: inscrições de influencers com status (novo, conversando, parceiro, recusado), observações,
-  chamar no WhatsApp, e-mail e exportar.
+  chamar no WhatsApp, e-mail, exportar e o **link de rastreio** de cada um.
+- **Resultados** (admin): funil por semana (cadastros → chamados → responderam → convertidos), gráfico, e conversão
+  por mensagem usada, por atendente e por origem (links de rastreio). Períodos de 4, 12 ou 26 semanas.
 - **Mensagens e respostas** (admin): textos dos botões de WhatsApp (marcadores `{nome}`, `{atendente}` etc.) e
   respostas prontas do chat do site.
 - **Saúde do sistema** (admin): variáveis configuradas (sem mostrar valores), banco, testes do assistente, da
   planilha e do WhatsApp, últimos erros e eventos.
 
-## 6. Editar o site direto na página (admin)
+## 6. Links de rastreio (de onde vêm os cadastros)
+
+Use links com parâmetros ao divulgar. A primeira visita fica guardada por 30 dias no navegador da pessoa e vai junto
+com o cadastro (aparece na tabela, no CSV, na planilha e em Resultados):
+
+- Posts e anúncios: `https://hubcapture.app/cadastro?utm_source=instagram&utm_campaign=reels-renda-extra`
+  (`utm_source` = rede; `utm_campaign` = qual post/campanha; `utm_medium` opcional, ex.: `bio`, `story`).
+- Influencers: `https://hubcapture.app/cadastro?ref=perfil` (botão **Copiar** no detalhe de cada um, na aba Colab).
+
+Funciona em qualquer página do site, não só no /cadastro.
+
+## 7. Exportar CSV (LGPD)
+
+Exportar pede **sua senha de novo** (e o código das 2 etapas, se ativo). Depois de confirmar, outras exportações
+ficam liberadas por 10 minutos. Senha errada conta no bloqueio de tentativas, e toda exportação fica na auditoria.
+Guarde os arquivos baixados só pelo tempo necessário.
+
+## 8. Backup e alertas
+
+Backup semanal criptografado (GitHub Actions) e alerta de erro por e-mail: `docs/backup.md`.
+
+## 9. Editar o site direto na página (admin)
 
 Logado, o site mostra uma barra no topo com seu nome, **Painel** e **Editar página**.
 Com a edição ligada, os blocos editáveis ganham contorno verde e um botão **Editar**:
 
 - **Topo da página**: título, destaque verde, subtítulo, textos dos modos trabalho/casa, valores/h e os itens com ✓.
+- **Como funciona**: título, subtítulo, de 2 a 4 passos e o texto do botão.
+- **Comunidade**: título, texto, benefícios, botão e o texto do cartão do Instagram (os links não mudam).
+- **Boné HubCap**: chamada, título, destaque, texto, vantagens, botão, link do botão e rodapé.
 - **Tutoriais em vídeo**: passos (título, descrição, vídeo), adicionar, remover e reordenar. Valem para a página
   inicial, para `/tutoriais` e para o tutorial do chat.
 - **Perguntas frequentes**: valem para o site, para o Google (resultado com FAQ) e para o assistente.
 
-**Vídeos**: cole o link do YouTube (`youtube.com/watch?v=…`, `youtu.be/…` ou `/shorts/…`). Pode ser vídeo
-**Não listado**. O site mostra só a miniatura e carrega o player no clique, então a página continua leve.
-Também aceita link de MP4 (`https://…mp4`, ex.: Vercel Blob).
+**Vídeos**: envie pelo botão **Enviar vídeo no YouTube Studio** (visibilidade **Não listado** ou Público) e cole o
+link (`youtube.com/watch?v=…`, `youtu.be/…` ou `/shorts/…`). O editor confere na hora se o vídeo existe, mostra
+o título e o canal, avisa se estiver **Privado** e oferece usar o título do vídeo no passo. O site mostra só a miniatura e carrega o player no clique, então a página continua leve.
+Também aceita link direto de MP4 (`https://…mp4`), mas o YouTube é o recomendado (grátis e sem limite de tráfego).
 
 **Salvar e publicar** atualiza o site na hora. **Restaurar original** volta ao texto do código.
 Membros com papel Equipe veem a barra, mas não editam.

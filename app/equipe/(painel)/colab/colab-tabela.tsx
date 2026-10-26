@@ -1,12 +1,15 @@
 'use client'
 
-import { Check, Copy, Download, Loader2, Mail, Search, Upload, X } from 'lucide-react'
+import { Check, Copy, Link2, Loader2, Mail, Search, Upload, X } from 'lucide-react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { WhatsappIcon } from '@/components/landing/whatsapp-icon'
 import { type ModeloMensagem, preencherMensagem } from '@/lib/mensagens'
 import { formatE164, waLink } from '@/lib/phone'
+import { linkRastreio } from '@/lib/rastreio'
+import { SITE_URL } from '@/lib/site'
 import { cn } from '@/lib/utils'
+import { BotaoExportar } from '../botao-exportar'
 import { dataCurta, Filtro, haQuanto, Indicadores, PainelLateral, Paginacao, Selo } from '../ui'
 
 export type LinhaColab = {
@@ -184,10 +187,7 @@ export function ColabTabela({
               Importar planilha
             </button>
             {podeExportar && (
-              <a href={exportarHref} className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-3 text-sm hover:bg-foreground/5 sm:flex-none">
-                <Download className="size-4" aria-hidden="true" />
-                Exportar CSV
-              </a>
+              <BotaoExportar href={exportarHref} />
             )}
           </div>
         </div>
@@ -326,6 +326,8 @@ function DetalheColab({
   onSalvar: (c: LinhaColab, local: Partial<LinhaColab>, corpo: Record<string, unknown>) => void
 }) {
   const [copiado, setCopiado] = useState(false)
+  const [linkCopiado, setLinkCopiado] = useState(false)
+  const rastreio = linkRastreio(SITE_URL, c.perfil)
   const [observacao, setObservacao] = useState(c.observacao ?? '')
   return (
     <>
@@ -385,6 +387,21 @@ function DetalheColab({
         />
         <span>Salva ao sair do campo.</span>
       </label>
+
+      <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+        Link de rastreio (cadastros por ele aparecem como "ref" em Cadastros e Resultados)
+        <div className="flex gap-2">
+          <code className="min-w-0 flex-1 truncate rounded-lg border border-border bg-background/60 px-3 py-2 text-sm text-foreground">{rastreio}</code>
+          <button
+            type="button"
+            onClick={() => navigator.clipboard.writeText(rastreio).then(() => setLinkCopiado(true)).catch(() => {})}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-foreground/5"
+          >
+            {linkCopiado ? <Check className="size-4" aria-hidden="true" /> : <Link2 className="size-4" aria-hidden="true" />}
+            {linkCopiado ? 'Copiado' : 'Copiar'}
+          </button>
+        </div>
+      </div>
 
       <div className="rounded-2xl bg-foreground/[0.04] p-3 text-sm leading-relaxed text-muted-foreground">{texto}</div>
       <a

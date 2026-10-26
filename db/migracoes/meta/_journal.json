@@ -15,6 +15,13 @@
       "when": 1793000115681,
       "tag": "0001_painel_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793024856865,
+      "tag": "0002_rastreio_etiquetas",
+      "breakpoints": true
     }
   ]
 }

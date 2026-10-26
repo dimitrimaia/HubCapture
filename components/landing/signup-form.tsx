@@ -1,5 +1,6 @@
 'use client'
 
+import { lerRastreio } from './rastreio-visita'
 import { ArrowRight, Check, CheckCircle2, ExternalLink, Loader2, PlayCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
@@ -75,7 +76,7 @@ function DadosForm({ onEnviado }: { onEnviado: (cadastro: CadastroLocal) => void
       const response = await fetch('/api/cadastro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...lead, consentimento, website: honeypot ?? '' }),
+        body: JSON.stringify({ ...lead, consentimento, rastreio: lerRastreio(), website: honeypot ?? '' }),
         signal: AbortSignal.timeout(SAVE_TIMEOUT_MS),
       })
       const data = await response.json().catch(() => ({}))

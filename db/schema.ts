@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import { boolean, index, integer, jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core'
 
 /** Quem deixou nome e WhatsApp em /cadastro (ou veio importado da planilha). Um por número. */
@@ -28,6 +29,15 @@ export const leads = pgTable(
     optOutEm: timestamp('opt_out_em', { withTimezone: true }),
     /** A equipe marcou o número como inválido/inexistente: sai da fila. */
     numeroInvalidoEm: timestamp('numero_invalido_em', { withTimezone: true }),
+    /** Anotação livre da equipe (ex.: "pediu ajuda com o Minute"). */
+    nota: text('nota'),
+    /** Etiquetas da equipe (ex.: "voltar sexta"); filtráveis na tabela. */
+    etiquetas: text('etiquetas').array().notNull().default(sql`'{}'::text[]`),
+    /** Rastreio da primeira visita: links com ?utm_source=…&utm_campaign=… ou ?ref=influencer. */
+    utmSource: text('utm_source'),
+    utmMedium: text('utm_medium'),
+    utmCampaign: text('utm_campaign'),
+    ref: text('ref'),
   },
   (tabela) => [index('leads_criado_em_idx').on(tabela.criadoEm)],
 )
