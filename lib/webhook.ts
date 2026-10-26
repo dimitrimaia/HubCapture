@@ -82,7 +82,12 @@ export async function lerCadastrosDaPlanilha(): Promise<{ ok: true; linhas: Linh
     const body = await response.text()
     const dados = JSON.parse(body)
     if (!dados?.ok || !Array.isArray(dados.linhas)) {
-      return { ok: false, erro: dados?.erro ? String(dados.erro) : 'A planilha não devolveu as linhas. Atualize o Apps Script.' }
+      const erro = dados?.erro
+        ? String(dados.erro)
+        : dados?.status === 'online'
+          ? 'A URL configurada na Vercel roda o código ANTIGO do Apps Script. Use "Testar planilha", acima, para ver qual implantação é.'
+          : 'A planilha não devolveu as linhas. Atualize o Apps Script.'
+      return { ok: false, erro }
     }
     return { ok: true, linhas: dados.linhas }
   } catch (error) {
@@ -101,4 +106,55 @@ export function parseDataPlanilha(valor?: string) {
   }
   const data = new Date(valor)
   return Number.isNaN(data.getTime()) ? undefined : data
+}
+
+export type DiagnosticoPlanilha = {
+  variavel: string | null
+  implantacao: string | null
+  tokenConfigurado: boolean
+  situacao: 'sem-url' | 'sem-token' | 'ok' | 'codigo-antigo' | 'token-invalido' | 'sem-acesso' | 'erro'
+  linhas?: number
+  detalhe?: string
+}
+
+/** Qual variável guarda a URL da planilha de usuários (sem mostrar o valor). */
+function variavelCadastro() {
+  if (process.env.CADASTRO_WEBHOOK_URL) return 'CADASTRO_WEBHOOK_URL'
+  if (process.env.COLAB_WEBHOOK_URL) return 'COLAB_WEBHOOK_URL'
+  return null
+}
+
+/** "AKfycbzrP…uSoCiL": começo e fim do código da implantação, para comparar com o Apps Script. */
+function resumoImplantacao(url: string) {
+  const id = /\/macros\/s\/([^/]+)\//.exec(url)?.[1]
+  return id ? `${id.slice(0, 8)}…${id.slice(-6)}` : null
+}
+
+/** Testa a leitura da planilha de usuários e explica o resultado (para o painel da equipe). */
+export async function diagnosticarPlanilha(): Promise<DiagnosticoPlanilha> {
+  const url = webhookUrlFor('cadastro')
+  const base = { variavel: variavelCadastro(), implantacao: url ? resumoImplantacao(url) : null, tokenConfigurado: Boolean(process.env.PLANILHA_LEITURA_TOKEN) }
+  if (!url) return { ...base, situacao: 'sem-url' }
+  if (!process.env.PLANILHA_LEITURA_TOKEN) return { ...base, situacao: 'sem-token' }
+
+  try {
+    const endereco = new URL(url)
+    endereco.searchParams.set('token', process.env.PLANILHA_LEITURA_TOKEN)
+    endereco.searchParams.set('aba', 'Cadastro')
+    const response = await fetch(endereco, { redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(20000) })
+    const texto = await response.text()
+    let dados: { ok?: boolean; linhas?: unknown[]; status?: string; erro?: string }
+    try {
+      dados = JSON.parse(texto)
+    } catch {
+      // Página HTML de login do Google: a implantação não está como "Qualquer pessoa".
+      return { ...base, situacao: 'sem-acesso', detalhe: `Resposta ${response.status} não é JSON.` }
+    }
+    if (dados.ok && Array.isArray(dados.linhas)) return { ...base, situacao: 'ok', linhas: dados.linhas.length }
+    if (dados.status === 'online') return { ...base, situacao: 'codigo-antigo' }
+    if (/token/i.test(dados.erro ?? '')) return { ...base, situacao: 'token-invalido', detalhe: dados.erro }
+    return { ...base, situacao: 'erro', detalhe: dados.erro ?? texto.slice(0, 160) }
+  } catch (error) {
+    return { ...base, situacao: 'erro', detalhe: String(error).slice(0, 160) }
+  }
 }

@@ -1,5 +1,5 @@
 export const REFERRAL_CODE = 'VEMHUB'
-export const PARTNER_TAGLINE = 'Partner Dimitri'
+export const PARTNER_TAGLINE = 'Parceiro oficial'
 
 export const SIGNUP_URL = 'https://app.hub.xyz/r/VEMHUB'
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=xyz.hub.mobile&hl=pt_BR'

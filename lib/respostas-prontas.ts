@@ -1,4 +1,5 @@
-import { APP_STORE_URL, PLAY_STORE_URL, SIGNUP_URL, SITE_URL, WHATSAPP_COMMUNITY_URL } from './site'
+import { APP_STORE_URL, PLAY_STORE_URL, SIGNUP_URL, SITE_URL, TUTORIAIS_PATH, WHATSAPP_COMMUNITY_URL } from './site'
+import { tutorialSteps } from './tutorials'
 
 /** Deixa a pergunta comparável: minúsculas, sem acentos, sem pontuação, espaços únicos. */
 export function normalizarPergunta(texto: string) {
@@ -9,6 +10,31 @@ export function normalizarPergunta(texto: string) {
     .replace(/[^a-z0-9 ]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+const URL_TUTORIAIS = `${SITE_URL}${TUTORIAIS_PATH}`
+
+/**
+ * Tutorial completo, montado a partir de lib/tutorials.ts (mesma fonte da página /tutoriais):
+ * índice com link para cada passo e a explicação de cada um. Atualiza sozinho com os passos.
+ */
+function tutorialCompleto() {
+  const temVideo = tutorialSteps.some((passo) => passo.youtubeId || passo.videoUrl)
+  const indice = tutorialSteps.map((passo, i) => `${i + 1}. [${passo.title}](${URL_TUTORIAIS}#passo-${i + 1})`).join('\n')
+  const passos = tutorialSteps
+    .map((passo, i) => `**Passo ${i + 1}: ${passo.title}**\n${passo.description} [Ver o passo ${i + 1}](${URL_TUTORIAIS}#passo-${i + 1})`)
+    .join('\n\n')
+  const videos = temVideo
+    ? `🎥 Cada passo tem vídeo na [página de tutoriais](${URL_TUTORIAIS}).`
+    : `🎥 Os vídeos de cada passo estão chegando na [página de tutoriais](${URL_TUTORIAIS}).`
+
+  return `Aqui está o passo a passo completo, do cadastro ao primeiro PIX:
+
+${indice}
+
+${passos}
+
+${videos} Comece pelo [cadastro com o VEMHUB](${SIGNUP_URL}).`
 }
 
 /**
@@ -22,7 +48,7 @@ const PRONTAS: Record<string, string> = {
 2. Crie sua conta com nome, e-mail e senha.
 3. Baixe o app **Hub Capture** ([Android](${PLAY_STORE_URL}) ou [iPhone](${APP_STORE_URL})) e entre com o mesmo e-mail.
 
-Quer ver na prática? Tem o [passo a passo em vídeo](${SITE_URL}/tutoriais).`,
+Depois vem o kit, o app Minute e a primeira gravação: peça o **tutorial completo** aqui no chat ou veja a [página de tutoriais](${URL_TUTORIAIS}).`,
 
   [normalizarPergunta('Quanto paga por hora?')]: `Os valores são por **hora de gravação aprovada**:
 
@@ -42,7 +68,22 @@ Para liberar: no painel do Hub Capture, abra **Gravar e ganhar → Vincule sua c
 Dúvidas? Fale na [comunidade do WhatsApp](${WHATSAPP_COMMUNITY_URL}).`,
 }
 
+/** Formas comuns de pedir o tutorial (comparadas já normalizadas). */
+const PEDIDOS_TUTORIAL = [
+  'tutorial completo',
+  'tutorial completo passo a passo',
+  'tutorial',
+  'passo a passo',
+  'passo a passo completo',
+  'como comecar',
+  'por onde comeco',
+  'quero o tutorial',
+  'me manda o tutorial',
+].map(normalizarPergunta)
+
 export function respostaPronta(pergunta: string) {
-  return PRONTAS[normalizarPergunta(pergunta)] ?? null
+  const chave = normalizarPergunta(pergunta)
+  if (PEDIDOS_TUTORIAL.includes(chave)) return tutorialCompleto()
+  return PRONTAS[chave] ?? null
 }
 
