@@ -1,6 +1,6 @@
 import 'server-only'
 import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
-import { getDb, leadEventos, leads } from '@/db'
+import { getDb, leadEventos, leads, limparUrlBanco } from '@/db'
 import type { LeadAcao } from './leads-tipos'
 
 export { LEAD_ACOES, type LeadAcao } from './leads-tipos'
@@ -149,7 +149,21 @@ export function explicarErroBanco(error: unknown) {
   else if (/ECONNREFUSED|ETIMEDOUT|CONNECT_TIMEOUT|ENETUNREACH|timeout/i.test(texto))
     dica = 'O banco não respondeu. Verifique se o projeto não está pausado (Supabase → Restore project) e se a URL é a do Transaction pooler (porta 6543).'
   else if (/Invalid URL|ERR_INVALID_URL|invalid connection string/i.test(texto))
-    dica = 'A DATABASE_URL não é uma URL válida. Ela começa com postgresql:// e não pode ter espaços ou aspas.'
+    dica = `A DATABASE_URL não é uma URL válida. ${conferirUrlBanco()}`
 
   return { codigo, mensagem, dica }
+}
+
+/** Dicas sobre o formato da DATABASE_URL sem nunca mostrar a senha. */
+function conferirUrlBanco() {
+  const url = limparUrlBanco(process.env.DATABASE_URL)
+  const problemas: string[] = []
+  if (!/^postgres(ql)?:\/\//.test(url)) problemas.push('não começa com postgresql://')
+  if (!url.includes('@')) problemas.push('falta o @ entre a senha e o endereço')
+  if (/\[|\]|YOUR-PASSWORD/i.test(url)) problemas.push('ainda tem [YOUR-PASSWORD] ou colchetes')
+  if (!/pooler\.supabase\.com:6543\//.test(url)) problemas.push('não termina em pooler.supabase.com:6543/postgres')
+  if (/\s/.test(url)) problemas.push('tem espaço ou quebra de linha')
+  return problemas.length
+    ? `Problemas encontrados: ${problemas.join('; ')}. Copie de novo a URL do Shared/Transaction pooler no Supabase.`
+    : 'Copie de novo a URL do Shared/Transaction pooler no Supabase e troque [YOUR-PASSWORD] pela senha (sem colchetes).'
 }
