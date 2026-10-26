@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { CommunityLinks } from '@/components/landing/community-section'
+import { BlocoEditavel } from '@/components/landing/edicao'
 import { CtaLink } from '@/components/landing/cta-link'
 import { Eyebrow } from '@/components/landing/eyebrow'
 import { SiteShell } from '@/components/landing/site-shell'
 import { StoreBadges } from '@/components/landing/store-badges'
 import { VideoEmbed } from '@/components/landing/video-embed'
 import { SITE_URL, TUTORIAIS_PATH } from '@/lib/site'
-import { tutorialSteps } from '@/lib/tutorials'
+import { obterConfig } from '@/lib/configuracoes'
+import type { TutorialStep } from '@/lib/tutorials'
 
 const title = 'Tutoriais Hub Capture: como gravar e ganhar no Hub App passo a passo'
 const description =
@@ -20,7 +22,10 @@ export const metadata: Metadata = {
   twitter: { title, description },
 }
 
-const structuredData = {
+/** Estático, refeito a cada hora ou quando um admin salva os tutoriais. */
+export const revalidate = 3600
+
+const dadosEstruturados = (tutorialSteps: TutorialStep[]) => ({
   '@context': 'https://schema.org',
   '@type': 'HowTo',
   name: title,
@@ -42,14 +47,17 @@ const structuredData = {
       },
     }),
   })),
-}
+})
 
-export default function TutoriaisPage() {
+export default async function TutoriaisPage() {
+  const tutorialSteps = await obterConfig('tutoriais', { fresco: true })
   return (
     <SiteShell>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData).replace(/</g, '\\u003c') }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(dadosEstruturados(tutorialSteps)).replace(/</g, '\\u003c'),
+        }}
       />
       <section aria-labelledby="tutoriais-title" className="px-4 pt-10 pb-16 sm:px-6 md:pt-16 md:pb-24">
         <div className="mx-auto max-w-5xl">
@@ -64,24 +72,30 @@ export default function TutoriaisPage() {
             </p>
           </div>
 
-          <ol className="mt-12 flex flex-col gap-6">
-            {tutorialSteps.map((step, index) => (
-              <li
-                key={step.title}
-                id={`passo-${index + 1}`}
-                className="glass grid scroll-mt-24 gap-6 rounded-3xl p-5 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center"
-              >
-                <VideoEmbed youtubeId={step.youtubeId} videoUrl={step.videoUrl} title={`Passo ${index + 1}: ${step.title}`} />
-                <div className="flex min-w-0 flex-col gap-3">
-                  <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground">
-                    {`Passo ${index + 1}`}
-                  </span>
-                  <h2 className="text-balance text-2xl font-semibold tracking-tight">{step.title}</h2>
-                  <p className="text-pretty leading-relaxed text-muted-foreground">{step.description}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
+          <BlocoEditavel bloco="tutoriais">
+            <ol className="mt-12 flex flex-col gap-6">
+              {tutorialSteps.map((step, index) => (
+                <li
+                  key={index}
+                  id={`passo-${index + 1}`}
+                  className="glass grid scroll-mt-24 gap-6 rounded-3xl p-5 sm:p-8 lg:grid-cols-[1.2fr_1fr] lg:items-center"
+                >
+                  <VideoEmbed
+                    youtubeId={step.youtubeId}
+                    videoUrl={step.videoUrl}
+                    title={`Passo ${index + 1}: ${step.title}`}
+                  />
+                  <div className="flex min-w-0 flex-col gap-3">
+                    <span className="inline-flex w-fit items-center gap-2 rounded-full bg-primary px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.15em] text-primary-foreground">
+                      {`Passo ${index + 1}`}
+                    </span>
+                    <h2 className="text-balance text-2xl font-semibold tracking-tight">{step.title}</h2>
+                    <p className="text-pretty leading-relaxed text-muted-foreground">{step.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </BlocoEditavel>
 
           <div className="mt-12 flex flex-col items-center gap-6 text-center">
             <CtaLink size="lg" withArrow>

@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
 import { getDb, leadEventos, leads, limparUrlBanco } from '@/db'
 import type { LeadAcao } from './leads-tipos'
 
@@ -8,13 +8,18 @@ export { LEAD_ACOES, type LeadAcao } from './leads-tipos'
 export type Lead = typeof leads.$inferSelect
 
 /** Cria o lead ou, se o número já existe, atualiza o nome. Retorna o id (ou null sem banco). */
-export async function salvarLead(dados: { nome: string; whatsapp: string; origem?: string }) {
+export async function salvarLead(dados: { nome: string; whatsapp: string; origem?: string; consentimento?: boolean }) {
   const db = getDb()
   if (!db) return null
+  const consentiu = dados.consentimento === true
   const [lead] = await db
     .insert(leads)
-    .values({ nome: dados.nome, whatsapp: dados.whatsapp, origem: dados.origem ?? 'site' })
-    .onConflictDoUpdate({ target: leads.whatsapp, set: { nome: dados.nome, atualizadoEm: new Date() } })
+    .values({ nome: dados.nome, whatsapp: dados.whatsapp, origem: dados.origem ?? 'site', consentimentoWhatsapp: consentiu })
+    .onConflictDoUpdate({
+      target: leads.whatsapp,
+      // Um novo envio só LIGA o consentimento; nunca desliga (quem quer sair responde SAIR).
+      set: { nome: dados.nome, atualizadoEm: new Date(), ...(consentiu ? { consentimentoWhatsapp: true } : {}) },
+    })
     .returning({ id: leads.id })
   await db.insert(leadEventos).values({ leadId: lead.id, tipo: 'formulario' })
   return lead.id
@@ -33,29 +38,6 @@ export async function registrarAcao(id: string, acao: LeadAcao) {
   if (!lead) return null
   await db.insert(leadEventos).values({ leadId: lead.id, tipo: `acao:${acao}` })
   return lead
-}
-
-export type FiltroLeads = 'nao-convertidos' | 'nao-chamados' | 'todos'
-
-export async function listarLeads({ filtro, busca, limite = 300 }: { filtro: FiltroLeads; busca?: string; limite?: number }) {
-  const db = getDb()
-  if (!db) return null
-  const condicoes = []
-  if (filtro === 'nao-convertidos') condicoes.push(isNull(leads.convertidoEm))
-  if (filtro === 'nao-chamados') condicoes.push(and(isNull(leads.convertidoEm), isNull(leads.chamadoEm)))
-  const termo = busca?.trim()
-  if (termo) {
-    const digitos = termo.replace(/\D/g, '')
-    condicoes.push(
-      or(ilike(leads.nome, `%${termo}%`), ...(digitos.length >= 3 ? [ilike(leads.whatsapp, `%${digitos}%`)] : [])),
-    )
-  }
-  return db
-    .select()
-    .from(leads)
-    .where(condicoes.length ? and(...condicoes) : undefined)
-    .orderBy(desc(leads.criadoEm))
-    .limit(limite)
 }
 
 export async function resumoLeads() {
@@ -166,4 +148,124 @@ function conferirUrlBanco() {
   return problemas.length
     ? `Problemas encontrados: ${problemas.join('; ')}. Copie de novo a URL do Shared/Transaction pooler no Supabase.`
     : 'Copie de novo a URL do Shared/Transaction pooler no Supabase e troque [YOUR-PASSWORD] pela senha (sem colchetes).'
+}
+
+/* ───────────── Tabela paginada do painel ───────────── */
+
+export const SITUACOES = ['pendentes', 'nunca-chamados', 'chamados', 'convertidos', 'invalidos', 'todos'] as const
+export type Situacao = (typeof SITUACOES)[number]
+export const ORDENS = ['recentes', 'antigos', 'nome', 'contato'] as const
+export type Ordem = (typeof ORDENS)[number]
+export const PERIODOS = ['todos', 'hoje', '7d', '30d'] as const
+export type Periodo = (typeof PERIODOS)[number]
+
+export type FiltrosLeads = {
+  situacao: Situacao
+  origem: 'todas' | 'site' | 'planilha'
+  periodo: Periodo
+  consentiu: boolean
+  busca: string
+  ordem: Ordem
+  pagina: number
+  porPagina: number
+}
+
+/** Lê os filtros da URL com valores seguros (qualquer valor estranho vira o padrão). */
+export function lerFiltrosLeads(params: Record<string, string | undefined>): FiltrosLeads {
+  const escolher = <T extends string>(valor: string | undefined, opcoes: readonly T[], padrao: T) =>
+    (opcoes as readonly string[]).includes(valor ?? '') ? (valor as T) : padrao
+  const porPagina = [25, 50, 100].includes(Number(params.por)) ? Number(params.por) : 25
+  return {
+    situacao: escolher(params.situacao, SITUACOES, 'pendentes'),
+    origem: escolher(params.origem, ['todas', 'site', 'planilha'] as const, 'todas'),
+    periodo: escolher(params.periodo, PERIODOS, 'todos'),
+    consentiu: params.consentiu === '1',
+    busca: (params.q ?? '').slice(0, 60),
+    ordem: escolher(params.ordem, ORDENS, 'recentes'),
+    pagina: Math.max(1, Math.min(10_000, Number.parseInt(params.pagina ?? '1', 10) || 1)),
+    porPagina,
+  }
+}
+
+function condicoesLeads(f: FiltrosLeads) {
+  const condicoes = []
+  const ativo = and(isNull(leads.convertidoEm), isNull(leads.numeroInvalidoEm), isNull(leads.optOutEm))
+  if (f.situacao === 'pendentes') condicoes.push(ativo)
+  if (f.situacao === 'nunca-chamados') condicoes.push(and(ativo, isNull(leads.chamadoEm)))
+  if (f.situacao === 'chamados') condicoes.push(and(ativo, sql`${leads.chamadoEm} is not null`))
+  if (f.situacao === 'convertidos') condicoes.push(sql`${leads.convertidoEm} is not null`)
+  if (f.situacao === 'invalidos') condicoes.push(or(sql`${leads.numeroInvalidoEm} is not null`, sql`${leads.optOutEm} is not null`))
+  if (f.origem !== 'todas') condicoes.push(eq(leads.origem, f.origem))
+  if (f.periodo === 'hoje')
+    condicoes.push(sql`${leads.criadoEm} >= date_trunc('day', now() at time zone 'America/Sao_Paulo') at time zone 'America/Sao_Paulo'`)
+  if (f.periodo === '7d') condicoes.push(sql`${leads.criadoEm} >= now() - interval '7 days'`)
+  if (f.periodo === '30d') condicoes.push(sql`${leads.criadoEm} >= now() - interval '30 days'`)
+  if (f.consentiu) condicoes.push(eq(leads.consentimentoWhatsapp, true))
+  const termo = f.busca.trim()
+  if (termo) {
+    const digitos = termo.replace(/\D/g, '')
+    condicoes.push(or(ilike(leads.nome, `%${termo}%`), ...(digitos.length >= 3 ? [ilike(leads.whatsapp, `%${digitos}%`)] : [])))
+  }
+  return condicoes.length ? and(...condicoes) : undefined
+}
+
+function ordemLeads(ordem: Ordem) {
+  if (ordem === 'antigos') return [asc(leads.criadoEm)]
+  if (ordem === 'nome') return [asc(leads.nome)]
+  if (ordem === 'contato') return [sql`${leads.chamadoEm} desc nulls last`, desc(leads.criadoEm)]
+  return [desc(leads.criadoEm)]
+}
+
+export async function paginaLeads(f: FiltrosLeads) {
+  const db = getDb()
+  if (!db) return null
+  const onde = condicoesLeads(f)
+  const [itens, [contagem]] = await Promise.all([
+    db
+      .select()
+      .from(leads)
+      .where(onde)
+      .orderBy(...ordemLeads(f.ordem))
+      .limit(f.porPagina)
+      .offset((f.pagina - 1) * f.porPagina),
+    db.select({ n: sql<number>`count(*)::int` }).from(leads).where(onde),
+  ])
+  return { itens, total: contagem?.n ?? 0 }
+}
+
+/** Para exportar em CSV: mesmos filtros, sem paginação (até 20 mil linhas). */
+export async function todosLeadsFiltrados(f: FiltrosLeads) {
+  const db = getDb()
+  if (!db) return null
+  return db.select().from(leads).where(condicoesLeads(f)).orderBy(...ordemLeads(f.ordem)).limit(20_000)
+}
+
+export async function historicoLead(id: string) {
+  const db = getDb()
+  if (!db) return null
+  return db.select().from(leadEventos).where(eq(leadEventos.leadId, id)).orderBy(desc(leadEventos.criadoEm)).limit(100)
+}
+
+/** Ações em lote da tabela (até 100 por vez). */
+export async function acaoEmLote(ids: string[], acao: 'convertido' | 'nao-convertido' | 'invalido' | 'valido', por: string) {
+  const db = getDb()
+  if (!db || ids.length === 0) return 0
+  const agora = new Date()
+  const set =
+    acao === 'convertido'
+      ? { convertidoEm: agora, convertidoPor: por }
+      : acao === 'nao-convertido'
+        ? { convertidoEm: null, convertidoPor: null }
+        : acao === 'invalido'
+          ? { numeroInvalidoEm: agora }
+          : { numeroInvalidoEm: null }
+  const atualizados = await db
+    .update(leads)
+    .set({ ...set, atualizadoEm: agora })
+    .where(inArray(leads.id, ids.slice(0, 100)))
+    .returning({ id: leads.id })
+  if (atualizados.length) {
+    await db.insert(leadEventos).values(atualizados.map((l) => ({ leadId: l.id, tipo: `lote:${acao}`, por })))
+  }
+  return atualizados.length
 }

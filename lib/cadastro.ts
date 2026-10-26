@@ -1,11 +1,16 @@
 import { isValidWhatsapp, onlyDigits } from './phone'
 
-export type CadastroLead = { nome: string; whatsapp: string }
+/** consentimento: marcou "Aceito receber mensagens do Hub Capture no WhatsApp" (opcional). */
+export type CadastroLead = { nome: string; whatsapp: string; consentimento?: boolean }
 export type CadastroErrors = Partial<Record<keyof CadastroLead, string>>
 
 export function normalizeCadastroLead(input: Record<string, unknown>): CadastroLead {
   const text = (key: string) => (typeof input[key] === 'string' ? (input[key] as string).trim() : '')
-  return { nome: text('nome').slice(0, 120), whatsapp: onlyDigits(text('whatsapp')) }
+  return {
+    nome: text('nome').slice(0, 120),
+    whatsapp: onlyDigits(text('whatsapp')),
+    consentimento: input.consentimento === true || input.consentimento === 'on',
+  }
 }
 
 export function validateCadastroLead(lead: CadastroLead): CadastroErrors {

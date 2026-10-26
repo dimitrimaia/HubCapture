@@ -5,7 +5,7 @@ export const maxDuration = 60
 
 /** Testa o Gemini com a configuração desta implantação e devolve o erro real do Google (só para a equipe). */
 export async function POST(request: Request) {
-  const sessao = await exigirSessaoApi(request)
+  const sessao = await exigirSessaoApi(request, 'admin')
   if (!sessao) return Response.json({ ok: false }, { status: 401 })
 
   const resultado = await testarAssistente()

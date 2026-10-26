@@ -1,3 +1,5 @@
+import { registrarErro } from './auditoria'
+
 /** acao: botão tocado no próximo passo do cadastro ou chamado feito pela equipe (aba "Acoes"). */
 export type LeadType = 'colab' | 'cadastro' | 'acao'
 
@@ -55,29 +57,47 @@ export async function forwardLead(tipo: LeadType, lead: Record<string, unknown>)
     try {
       ok = response.ok && JSON.parse(body)?.ok === true
     } catch {}
-    if (!ok) console.error(`[leads] Webhook "${tipo}" respondeu ${response.status}:`, body.slice(0, 500))
+    if (!ok) await registrarErro('planilha', `Webhook "${tipo}" respondeu ${response.status}: ${body.slice(0, 300)}`)
     return ok
   } catch (error) {
-    console.error(`[leads] Falha ao enviar lead "${tipo}" para o webhook:`, error)
+    await registrarErro('planilha', error)
     return false
   }
 }
 
-export type LinhaPlanilha = { criadoEm?: string; nome?: string; whatsapp?: string | number }
+export type LinhaPlanilha = {
+  criadoEm?: string
+  nome?: string
+  whatsapp?: string | number
+  perfil?: string
+  seguidores?: string
+  email?: string
+}
 
 /**
  * Lê a aba "Cadastro" pela função doGet do Apps Script (protegida por PLANILHA_LEITURA_TOKEN).
  * Usado pelo painel da equipe para importar quem se cadastrou antes do banco existir.
  */
-export async function lerCadastrosDaPlanilha(): Promise<{ ok: true; linhas: LinhaPlanilha[] } | { ok: false; erro: string }> {
-  const url = webhookUrlFor('cadastro')
-  const token = process.env.PLANILHA_LEITURA_TOKEN
-  if (!url || !token) return { ok: false, erro: 'Configure CADASTRO_WEBHOOK_URL e PLANILHA_LEITURA_TOKEN na Vercel.' }
+export async function lerLinhasPlanilha(
+  tipo: 'cadastro' | 'colab' = 'cadastro',
+): Promise<{ ok: true; linhas: LinhaPlanilha[] } | { ok: false; erro: string }> {
+  const url = webhookUrlFor(tipo)
+  // A planilha de influencers tem o próprio Apps Script; pode ter um token só dela.
+  const token = tipo === 'colab' ? process.env.INFLUENCER_LEITURA_TOKEN || process.env.PLANILHA_LEITURA_TOKEN : process.env.PLANILHA_LEITURA_TOKEN
+  if (!url || !token) {
+    return {
+      ok: false,
+      erro:
+        tipo === 'colab'
+          ? 'Configure INFLUENCER_WEBHOOK_URL e INFLUENCER_LEITURA_TOKEN (ou PLANILHA_LEITURA_TOKEN) na Vercel.'
+          : 'Configure CADASTRO_WEBHOOK_URL e PLANILHA_LEITURA_TOKEN na Vercel.',
+    }
+  }
 
   try {
     const endereco = new URL(url)
     endereco.searchParams.set('token', token)
-    endereco.searchParams.set('aba', 'Cadastro')
+    endereco.searchParams.set('aba', tipo === 'colab' ? 'Colab' : 'Cadastro')
     const response = await fetch(endereco, { redirect: 'follow', cache: 'no-store', signal: AbortSignal.timeout(20000) })
     const body = await response.text()
     const dados = JSON.parse(body)
@@ -95,6 +115,9 @@ export async function lerCadastrosDaPlanilha(): Promise<{ ok: true; linhas: Linh
     return { ok: false, erro: 'Não foi possível ler a planilha (resposta inválida). Confira a implantação do Apps Script.' }
   }
 }
+
+/** Compatibilidade: leitura da aba Cadastro. */
+export const lerCadastrosDaPlanilha = () => lerLinhasPlanilha('cadastro')
 
 /** "20/10/2026 11:22:12" (horário de Brasília) ou ISO → Date. */
 export function parseDataPlanilha(valor?: string) {

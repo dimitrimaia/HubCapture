@@ -1,7 +1,6 @@
 import 'server-only'
 import {
   APP_STORE_URL,
-  faqs,
   HUBCAP_URL,
   INSTAGRAM_URL,
   PLAY_STORE_URL,
@@ -10,8 +9,10 @@ import {
   SITE_URL,
   WHATSAPP_COMMUNITY_URL,
 } from './site'
+import { obterConfig } from './configuracoes'
 import { normalizarPergunta, respostaPronta } from './respostas-prontas'
-import { tutorialSteps } from './tutorials'
+import type { Pergunta } from './conteudo'
+import type { TutorialStep } from './tutorials'
 
 /**
  * Assistente do Hub Capture (chat do site e atendimento no WhatsApp), com o Gemini pela API REST.
@@ -54,7 +55,7 @@ function modelosParaTentar() {
   return [...new Set(lista)]
 }
 
-function conhecimento() {
+function conhecimento(faqs: Pergunta[], tutorialSteps: TutorialStep[]) {
   const perguntas = faqs.map((faq) => `P: ${faq.question}\nR: ${faq.answer}`).join('\n\n')
   const passos = tutorialSteps.map((passo, i) => `${i + 1}. ${passo.title}: ${passo.description}`).join('\n')
   return `## Perguntas frequentes\n${perguntas}\n\n## Tutorial passo a passo\n${passos}\n\n## Links oficiais
@@ -67,7 +68,7 @@ function conhecimento() {
 - Tutoriais em vídeo: ${SITE_URL}/tutoriais`
 }
 
-function instrucoes(canal: Canal) {
+function instrucoes(canal: Canal, base: { faqs: Pergunta[]; passos: TutorialStep[] }) {
   const formato =
     canal === 'whatsapp'
       ? 'Você responde pelo WhatsApp: mensagens curtas (até 3 parágrafos), sem títulos nem tabelas; links escritos por extenso.'
@@ -87,7 +88,7 @@ Regras obrigatórias:
 7. Não invente links: use apenas os da lista de links oficiais.
 
 ## Conhecimento
-${conhecimento()}`
+${conhecimento(base.faqs, base.passos)}`
 }
 
 /** Limpa o histórico vindo do navegador ou da memória: papéis válidos, tamanhos limitados, começa pela pessoa. */
@@ -128,7 +129,7 @@ function chaveCache(historico: MensagemChat[], canal: Canal) {
 /** Gera a resposta do assistente. Lança AssistenteIndisponivel sem chave ou se o Gemini falhar. */
 export async function gerarResposta(historico: MensagemChat[], canal: Canal): Promise<string> {
   if (historico.length === 1 && historico[0].role === 'user') {
-    const pronta = respostaPronta(historico[0].content)
+    const pronta = respostaPronta(historico[0].content, await obterConfig('respostas_prontas'), await obterConfig('tutoriais'))
     if (pronta) return pronta
   }
   const chave = chaveCache(historico, canal)
@@ -170,8 +171,9 @@ async function chamarGemini(historico: MensagemChat[], canal: Canal): Promise<Re
 
   // ASSISTENTE_API_BASE só existe para testes locais (servidor falso); em produção fica vazio.
   const base = process.env.ASSISTENTE_API_BASE || 'https://generativelanguage.googleapis.com'
+  const [faqs, passos] = await Promise.all([obterConfig('faq'), obterConfig('tutoriais')])
   const corpoBase = {
-    systemInstruction: { parts: [{ text: instrucoes(canal) }] },
+    systemInstruction: { parts: [{ text: instrucoes(canal, { faqs, passos }) }] },
     contents: historico.map((mensagem) => ({
       role: mensagem.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: mensagem.content }],

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
 export default function EquipePage() {
-  redirect('/equipe/leads')
+  redirect('/equipe/fila')
 }

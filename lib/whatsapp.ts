@@ -151,3 +151,27 @@ export function enviarTexto(para: string, texto: string) {
 export function marcarComoLida(mensagemId: string) {
   return chamarApi({ status: 'read', message_id: mensagemId, typing_indicator: { type: 'text' } })
 }
+
+/**
+ * Envia um MODELO aprovado pela Meta (a única forma de a empresa escrever primeiro, fora da
+ * janela de 24 h). É PAGO por mensagem entregue: ver docs/bots-whatsapp.md.
+ * `parametros` preenche {{1}}, {{2}}… do corpo do modelo, na ordem.
+ */
+export async function enviarModelo(para: string, modelo: string, parametros: string[] = [], idioma = 'pt_BR') {
+  const resposta = (await chamarApi({
+    recipient_type: 'individual',
+    to: para.replace(/\D/g, ''),
+    type: 'template',
+    template: {
+      name: modelo,
+      language: { code: idioma },
+      ...(parametros.length ? { components: [{ type: 'body', parameters: parametros.map((text) => ({ type: 'text', text })) }] } : {}),
+    },
+  })) as { messages?: { id?: string }[] }
+  return resposta.messages?.[0]?.id ?? null
+}
+
+/** "SAIR", "parar", "stop"… = a pessoa não quer mais mensagens automáticas. */
+export function pediuParaSair(texto: string) {
+  return /^\s*(sair|parar|pare|stop|cancelar|descadastrar|remover)\s*[.!]*\s*$/i.test(texto)
+}

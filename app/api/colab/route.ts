@@ -1,4 +1,7 @@
 import { normalizeColabLead, validateColabLead } from '@/lib/colab'
+import { registrarErro } from '@/lib/auditoria'
+import { salvarColab } from '@/lib/colabs'
+import { toE164 } from '@/lib/phone'
 import { forwardLead } from '@/lib/webhook'
 
 export async function POST(request: Request) {
@@ -20,7 +23,16 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, errors }, { status: 400 })
   }
 
-  if (!(await forwardLead('colab', lead))) {
+  // Banco (aba Colab do painel) e planilha de influencers (cópia) em paralelo.
+  const whatsapp = toE164(lead.whatsapp) ?? `+55${lead.whatsapp}`
+  const [banco, planilha] = await Promise.allSettled([
+    salvarColab({ nome: lead.nome, perfil: lead.perfil, seguidores: lead.seguidores, email: lead.email, whatsapp }),
+    forwardLead('colab', lead),
+  ])
+  if (banco.status === 'rejected') await registrarErro('colab', banco.reason)
+  const salvouBanco = banco.status === 'fulfilled' && banco.value !== null
+  const salvouPlanilha = planilha.status === 'fulfilled' && planilha.value
+  if (!salvouBanco && !salvouPlanilha) {
     return Response.json({ ok: false, error: 'Não foi possível enviar agora. Tente novamente.' }, { status: 502 })
   }
   return Response.json({ ok: true })
