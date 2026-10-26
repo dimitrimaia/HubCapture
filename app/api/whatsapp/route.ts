@@ -1,6 +1,7 @@
 import { after } from 'next/server'
 import { registrarErro } from '@/lib/auditoria'
 import { AssistenteIndisponivel, gerarResposta, limparHistorico } from '@/lib/assistente'
+import { AVISO_HUMANO, pediuHumano, pedirHumano, registrarDoCliente, registrarMensagem } from '@/lib/atendimento'
 import { marcarRespondeuWhatsapp } from '@/lib/leads'
 import { variantesE164 } from '@/lib/phone'
 import { SIGNUP_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
@@ -54,6 +55,12 @@ export async function POST(request: Request) {
   return new Response(null, { status: 200 })
 }
 
+/** Envia e guarda na central de atendimento o que o assistente respondeu. */
+async function responderComoBot(para: string, texto: string, atendimentoId: string | null) {
+  await enviarTexto(para, texto)
+  if (atendimentoId) await registrarMensagem(atendimentoId, 'bot', texto).catch(() => null)
+}
+
 async function atender(mensagem: MensagemRecebida) {
   if (!(await mensagemNova(mensagem.id))) return // reenvio da Meta: já respondemos
   if (!whatsappConfigurado()) {
@@ -61,17 +68,39 @@ async function atender(mensagem: MensagemRecebida) {
     return
   }
 
-  await marcarComoLida(mensagem.id).catch((error) => console.warn('[whatsapp] marcar como lida:', error))
   await marcarRespondeuWhatsapp(variantesE164(mensagem.de)).catch((error) => console.warn('[whatsapp] lead:', error))
 
-  if (!mensagem.texto) {
-    await enviarTexto(mensagem.de, SO_TEXTO)
+  // Central de atendimento: toda mensagem fica guardada (texto ou o tipo: áudio, imagem…).
+  const atendimento = await registrarDoCliente({
+    canal: 'whatsapp',
+    contato: mensagem.de,
+    nome: mensagem.nome,
+    texto: mensagem.texto ?? `[${mensagem.tipo === 'audio' ? 'áudio' : mensagem.tipo === 'image' ? 'imagem' : mensagem.tipo}]`,
+  }).catch(async (error) => {
+    await registrarErro('atendimento', error)
+    return null
+  })
+  const id = atendimento?.id ?? null
+
+  if (mensagem.texto && pediuParaSair(mensagem.texto)) {
+    await marcarOptOut(variantesE164(mensagem.de)).catch((error) => console.warn('[whatsapp] opt-out:', error))
+    await responderComoBot(mensagem.de, SAIU, id)
     return
   }
 
-  if (pediuParaSair(mensagem.texto)) {
-    await marcarOptOut(variantesE164(mensagem.de)).catch((error) => console.warn('[whatsapp] opt-out:', error))
-    await enviarTexto(mensagem.de, SAIU)
+  // Uma pessoa da equipe está cuidando (ou vai cuidar): o assistente fica quieto.
+  if (atendimento && (atendimento.status === 'aguardando' || atendimento.status === 'humano')) return
+
+  await marcarComoLida(mensagem.id).catch((error) => console.warn('[whatsapp] marcar como lida:', error))
+
+  if (!mensagem.texto) {
+    await responderComoBot(mensagem.de, SO_TEXTO, id)
+    return
+  }
+
+  if (atendimento && pediuHumano(mensagem.texto)) {
+    await pedirHumano(atendimento.id)
+    await responderComoBot(mensagem.de, AVISO_HUMANO, id)
     return
   }
 
@@ -85,6 +114,6 @@ async function atender(mensagem: MensagemRecebida) {
     resposta = SEM_ASSISTENTE
   }
 
-  await enviarTexto(mensagem.de, resposta)
+  await responderComoBot(mensagem.de, resposta, id)
   await salvarConversa(mensagem.de, [...historico, { role: 'assistant', content: resposta }])
 }

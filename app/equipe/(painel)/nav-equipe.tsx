@@ -4,6 +4,7 @@ import { Dialog } from '@base-ui/react/dialog'
 import {
   ExternalLink,
   Handshake,
+  Headset,
   LayoutList,
   LogOut,
   Menu,
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Logo } from '@/components/landing/logo'
 import { cn } from '@/lib/utils'
 import { sair } from '../actions'
@@ -27,6 +28,7 @@ const GRUPOS = [
   {
     titulo: 'Operação',
     itens: [
+      { href: '/equipe/atendimento', rotulo: 'Atendimento', icone: Headset },
       { href: '/equipe/fila', rotulo: 'Fila de chamadas', icone: PhoneCall },
       { href: '/equipe/leads', rotulo: 'Cadastros', icone: LayoutList },
       { href: '/equipe/colab', rotulo: 'Colab', icone: Handshake },
@@ -50,8 +52,25 @@ const GRUPOS = [
 
 type Props = { nome: string; admin: boolean }
 
+/** Quantas pessoas pediram atendimento humano (atualiza a cada 30 s). */
+function useNaFila() {
+  const [fila, setFila] = useState(0)
+  useEffect(() => {
+    async function buscar() {
+      const r = await fetch('/api/equipe/atendimento?filtro=fila', { cache: 'no-store' }).catch(() => null)
+      const dados = await r?.json().catch(() => null)
+      if (dados?.ok) setFila(dados.contagem?.fila ?? 0)
+    }
+    buscar()
+    const intervalo = setInterval(() => document.visibilityState === 'visible' && buscar(), 30000)
+    return () => clearInterval(intervalo)
+  }, [])
+  return fila
+}
+
 function Links({ admin, onNavegar }: { admin: boolean; onNavegar?: () => void }) {
   const pathname = usePathname()
+  const naFila = useNaFila()
   return (
     <nav aria-label="Painel" className="flex flex-col gap-5">
       {GRUPOS.filter((g) => admin || !g.admin).map((grupo) => (
@@ -73,6 +92,11 @@ function Links({ admin, onNavegar }: { admin: boolean; onNavegar?: () => void })
                   >
                     <Icone className={cn('size-4', ativa && 'text-primary')} aria-hidden="true" />
                     {rotulo}
+                    {href === '/equipe/atendimento' && naFila > 0 && (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-white tabular-nums" aria-label={`${naFila} na fila`}>
+                        {naFila}
+                      </span>
+                    )}
                   </Link>
                 </li>
               )

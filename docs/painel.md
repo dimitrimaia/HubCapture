@@ -46,6 +46,8 @@ desativar. O sistema não deixa ficar sem nenhum admin ativo.
 
 ## 5. Abas
 
+- **Atendimento**: central com as conversas do chat do site e do WhatsApp, fila de quem pediu humano, histórico
+  completo e resposta direto do painel. Guia: `docs/atendimento.md`.
 - **Fila de chamadas**: um contato por vez, na ordem certa (novos primeiro; 2º contato 2 dias depois; 3º contato
   3 dias depois; no máximo 3). Botões: Abrir WhatsApp, Pular, Já converteu, Número inválido. Mostra quantas
   chamadas você fez hoje (sugestão: até 40 por dia por número, para o WhatsApp não bloquear).
