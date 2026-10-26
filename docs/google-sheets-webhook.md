@@ -31,7 +31,7 @@ Na planilha: **Extensões → Apps Script**. Apague o conteúdo do arquivo e col
 ```js
 const COLUNAS = {
   colab: ['criadoEm', 'nome', 'perfil', 'seguidores', 'email', 'whatsapp', 'consentimento', 'origem'],
-  cadastro: ['criadoEm', 'nome', 'whatsapp', 'origem', 'consentimento'],
+  cadastro: ['criadoEm', 'nome', 'whatsapp', 'origem', 'consentimento', 'utm_source', 'utm_medium', 'utm_campaign', 'ref'],
   acao: ['criadoEm', 'whatsapp', 'nome', 'acao', 'por', 'origem'],
 }
 const ABAS = { colab: 'Colab', cadastro: 'Cadastro', acao: 'Acoes' }
@@ -95,8 +95,9 @@ Na **planilha de influencers**, troque `ABAS_LEITURA` para `['Colab']`, crie o `
 mesmo valor em `INFLUENCER_LEITURA_TOKEN` na Vercel (sem essa variável, o site tenta o `PLANILHA_LEITURA_TOKEN`).
 Assim o botão **Importar planilha** da aba Colab do painel funciona.
 
-Coluna nova `consentimento` (cadastro): se a aba Cadastro já existe, escreva `consentimento` na primeira linha da
-coluna E. Ela fica `TRUE` quando a pessoa marcou "Aceito receber mensagens no WhatsApp".
+Colunas novas na aba Cadastro: se ela já existe, escreva na primeira linha, a partir da coluna E:
+`consentimento`, `utm_source`, `utm_medium`, `utm_campaign`, `ref` (de onde a pessoa veio, ver docs/painel.md).
+A coluna `consentimento` fica `TRUE` quando a pessoa marcou "Aceito receber mensagens no WhatsApp".
 
 O token fica só no Apps Script e na Vercel, nunca no código. Sem ele, a URL `/exec` não devolve nenhum dado.
 

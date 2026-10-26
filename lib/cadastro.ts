@@ -1,7 +1,8 @@
 import { isValidWhatsapp, onlyDigits } from './phone'
+import { limparRastreio, type Rastreio } from './rastreio'
 
 /** consentimento: marcou "Aceito receber mensagens do Hub Capture no WhatsApp" (opcional). */
-export type CadastroLead = { nome: string; whatsapp: string; consentimento?: boolean }
+export type CadastroLead = { nome: string; whatsapp: string; consentimento?: boolean; rastreio?: Rastreio }
 export type CadastroErrors = Partial<Record<keyof CadastroLead, string>>
 
 export function normalizeCadastroLead(input: Record<string, unknown>): CadastroLead {
@@ -10,6 +11,7 @@ export function normalizeCadastroLead(input: Record<string, unknown>): CadastroL
     nome: text('nome').slice(0, 120),
     whatsapp: onlyDigits(text('whatsapp')),
     consentimento: input.consentimento === true || input.consentimento === 'on',
+    rastreio: limparRastreio(input.rastreio),
   }
 }
 

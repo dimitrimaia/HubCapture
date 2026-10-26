@@ -91,10 +91,13 @@ const dadosEstruturados = (faqs: Pergunta[]) => ({
 })
 
 export default async function Page() {
-  const [hero, passos, faqs] = await Promise.all([
+  const [hero, passos, faqs, comoFunciona, comunidade, hubcap] = await Promise.all([
     obterConfig('conteudo_hero', { fresco: true }),
     obterConfig('tutoriais', { fresco: true }),
     obterConfig('faq', { fresco: true }),
+    obterConfig('conteudo_como_funciona', { fresco: true }),
+    obterConfig('conteudo_comunidade', { fresco: true }),
+    obterConfig('conteudo_hubcap', { fresco: true }),
   ])
   return (
     <SiteShell withModeBar>
@@ -107,16 +110,22 @@ export default async function Page() {
       <BlocoEditavel bloco="conteudo_hero">
         <Hero conteudo={hero} />
       </BlocoEditavel>
-      <HowItWorks />
+      <BlocoEditavel bloco="conteudo_como_funciona">
+        <HowItWorks conteudo={comoFunciona} />
+      </BlocoEditavel>
       <BlocoEditavel bloco="tutoriais">
         <TutorialsCard passos={passos} />
       </BlocoEditavel>
       <CodeSection />
       <ColabSection />
-      <CommunitySection />
+      <BlocoEditavel bloco="conteudo_comunidade">
+        <CommunitySection conteudo={comunidade} />
+      </BlocoEditavel>
       <Tutorial />
       <TutorialsCard passos={passos} className="px-4 pb-16 sm:px-6 md:pb-24" />
-      <HubcapSection />
+      <BlocoEditavel bloco="conteudo_hubcap">
+        <HubcapSection conteudo={hubcap} />
+      </BlocoEditavel>
       <EarningModes />
       <DifferenceSection />
       <GuidesSection />

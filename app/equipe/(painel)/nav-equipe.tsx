@@ -10,6 +10,7 @@ import {
   MessageSquareText,
   PhoneCall,
   Activity,
+  ChartColumn,
   UserCog,
   UserRound,
   Users,
@@ -35,6 +36,7 @@ const GRUPOS = [
     titulo: 'Administração',
     admin: true,
     itens: [
+      { href: '/equipe/resultados', rotulo: 'Resultados', icone: ChartColumn },
       { href: '/equipe/mensagens', rotulo: 'Mensagens e respostas', icone: MessageSquareText },
       { href: '/equipe/usuarios', rotulo: 'Usuários', icone: Users },
       { href: '/equipe/sistema', rotulo: 'Saúde do sistema', icone: Activity },

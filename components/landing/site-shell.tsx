@@ -2,6 +2,7 @@ import { CadastroLembrete } from './cadastro-lembrete'
 import { ChatWidget } from './chat-widget'
 import { ColabProvider } from './colab-dialog'
 import { EdicaoProvider } from './edicao'
+import { RastreioVisita } from './rastreio-visita'
 import { ModeBar } from './mode-bar'
 import { ModeProvider } from './mode-context'
 import { SiteFooter } from './site-footer'
@@ -25,6 +26,7 @@ export function SiteShell({ children, withModeBar = false }: { children: React.R
           </EdicaoProvider>
         </div>
         {withModeBar && <ModeBar />}
+        <RastreioVisita />
         <ChatWidget acimaDaModeBar={withModeBar} />
       </ColabProvider>
     </ModeProvider>

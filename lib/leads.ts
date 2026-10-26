@@ -1,24 +1,34 @@
 import 'server-only'
 import { and, asc, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm'
 import { getDb, leadEventos, leads, limparUrlBanco } from '@/db'
-import type { LeadAcao } from './leads-tipos'
+import { type LeadAcao, limparEtiqueta } from './leads-tipos'
+import type { Rastreio } from './rastreio'
 
 export { LEAD_ACOES, type LeadAcao } from './leads-tipos'
 
 export type Lead = typeof leads.$inferSelect
 
 /** Cria o lead ou, se o número já existe, atualiza o nome. Retorna o id (ou null sem banco). */
-export async function salvarLead(dados: { nome: string; whatsapp: string; origem?: string; consentimento?: boolean }) {
+export async function salvarLead(dados: { nome: string; whatsapp: string; origem?: string; consentimento?: boolean; rastreio?: Rastreio }) {
   const db = getDb()
   if (!db) return null
   const consentiu = dados.consentimento === true
   const [lead] = await db
     .insert(leads)
-    .values({ nome: dados.nome, whatsapp: dados.whatsapp, origem: dados.origem ?? 'site', consentimentoWhatsapp: consentiu })
+    .values({ nome: dados.nome, whatsapp: dados.whatsapp, origem: dados.origem ?? 'site', consentimentoWhatsapp: consentiu, ...dados.rastreio })
     .onConflictDoUpdate({
       target: leads.whatsapp,
       // Um novo envio só LIGA o consentimento; nunca desliga (quem quer sair responde SAIR).
-      set: { nome: dados.nome, atualizadoEm: new Date(), ...(consentiu ? { consentimentoWhatsapp: true } : {}) },
+      // O rastreio da PRIMEIRA vez vale: só preenche o que ainda está vazio.
+      set: {
+        nome: dados.nome,
+        atualizadoEm: new Date(),
+        ...(consentiu ? { consentimentoWhatsapp: true } : {}),
+        utmSource: sql`coalesce(${leads.utmSource}, excluded.utm_source)`,
+        utmMedium: sql`coalesce(${leads.utmMedium}, excluded.utm_medium)`,
+        utmCampaign: sql`coalesce(${leads.utmCampaign}, excluded.utm_campaign)`,
+        ref: sql`coalesce(${leads.ref}, excluded.ref)`,
+      },
     })
     .returning({ id: leads.id })
   await db.insert(leadEventos).values({ leadId: lead.id, tipo: 'formulario' })
@@ -164,6 +174,7 @@ export type FiltrosLeads = {
   origem: 'todas' | 'site' | 'planilha'
   periodo: Periodo
   consentiu: boolean
+  etiqueta: string
   busca: string
   ordem: Ordem
   pagina: number
@@ -180,6 +191,7 @@ export function lerFiltrosLeads(params: Record<string, string | undefined>): Fil
     origem: escolher(params.origem, ['todas', 'site', 'planilha'] as const, 'todas'),
     periodo: escolher(params.periodo, PERIODOS, 'todos'),
     consentiu: params.consentiu === '1',
+    etiqueta: limparEtiqueta(params.etiqueta) ?? '',
     busca: (params.q ?? '').slice(0, 60),
     ordem: escolher(params.ordem, ORDENS, 'recentes'),
     pagina: Math.max(1, Math.min(10_000, Number.parseInt(params.pagina ?? '1', 10) || 1)),
@@ -201,6 +213,7 @@ function condicoesLeads(f: FiltrosLeads) {
   if (f.periodo === '7d') condicoes.push(sql`${leads.criadoEm} >= now() - interval '7 days'`)
   if (f.periodo === '30d') condicoes.push(sql`${leads.criadoEm} >= now() - interval '30 days'`)
   if (f.consentiu) condicoes.push(eq(leads.consentimentoWhatsapp, true))
+  if (f.etiqueta) condicoes.push(sql`${f.etiqueta} = any(${leads.etiquetas})`)
   const termo = f.busca.trim()
   if (termo) {
     const digitos = termo.replace(/\D/g, '')
@@ -268,4 +281,32 @@ export async function acaoEmLote(ids: string[], acao: 'convertido' | 'nao-conver
     await db.insert(leadEventos).values(atualizados.map((l) => ({ leadId: l.id, tipo: `lote:${acao}`, por })))
   }
   return atualizados.length
+}
+
+/** Etiquetas já usadas (para o filtro e as sugestões), mais usadas primeiro. */
+export async function etiquetasEmUso() {
+  const db = getDb()
+  if (!db) return []
+  const linhas = await db.execute<{ etiqueta: string }>(
+    sql`select etiqueta from (select unnest(${leads.etiquetas}) as etiqueta from ${leads}) e group by etiqueta order by count(*) desc limit 50`,
+  )
+  return [...linhas].map((l) => l.etiqueta)
+}
+
+/** Salva nota e/ou etiquetas de um contato e registra no histórico. */
+export async function salvarNotas(id: string, dados: { nota?: string; etiquetas?: string[] }, por: string) {
+  const db = getDb()
+  if (!db) return null
+  const set: Partial<typeof leads.$inferInsert> = { atualizadoEm: new Date() }
+  if (dados.nota !== undefined) set.nota = dados.nota.trim().slice(0, 2000) || null
+  if (dados.etiquetas !== undefined) {
+    set.etiquetas = [...new Set(dados.etiquetas.map(limparEtiqueta).filter((e): e is string => Boolean(e)))].slice(0, 10)
+  }
+  const [lead] = await db.update(leads).set(set).where(eq(leads.id, id)).returning({ id: leads.id, etiquetas: leads.etiquetas, nota: leads.nota })
+  if (!lead) return null
+  const eventos = []
+  if (dados.nota !== undefined) eventos.push({ leadId: id, tipo: 'nota', detalhe: lead.nota?.slice(0, 120) ?? 'nota apagada', por })
+  if (dados.etiquetas !== undefined) eventos.push({ leadId: id, tipo: 'etiquetas', detalhe: lead.etiquetas.join(', ') || 'sem etiquetas', por })
+  if (eventos.length) await db.insert(leadEventos).values(eventos)
+  return lead
 }

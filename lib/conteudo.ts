@@ -32,9 +32,68 @@ export const HERO_PADRAO: ConteudoHero = {
   destaques: ['Cadastro gratuito', 'Starter Kit grátis', 'Saque via PIX'],
 }
 
+export type ConteudoComoFunciona = { titulo: string; subtitulo: string; passos: { titulo: string; descricao: string }[]; botao: string }
+
+export type ConteudoHubcap = {
+  chamada: string
+  titulo: string
+  destaque: string
+  texto: string
+  vantagens: string[]
+  botao: string
+  link: string
+  rodape: string
+}
+
+export type ConteudoComunidade = { titulo: string; texto: string; beneficios: string[]; botao: string; instagramTexto: string }
+
+export const COMO_FUNCIONA_PADRAO: ConteudoComoFunciona = {
+  titulo: 'Comece a ganhar em 3 passos simples',
+  subtitulo: 'Sem equipamento caro, sem experiência com vídeo. Só o seu celular e as tarefas que você já faz.',
+  passos: [
+    {
+      titulo: 'Cadastro gratuito',
+      descricao: 'Crie sua conta em minutos e peça o Starter Kit: faixa de cabeça e suporte para o celular, enviados sem custo até você.',
+    },
+    {
+      titulo: 'Capture o mundo real',
+      descricao: 'Prenda o celular na cabeça e grave tarefas cotidianas do começo ao fim — arrumar a casa, cozinhar, consertar, montar.',
+    },
+    {
+      titulo: 'Receba com segurança',
+      descricao: 'Cada vídeo passa por verificação de qualidade. As horas aprovadas são creditadas no painel e pagas via PIX.',
+    },
+  ],
+  botao: 'Fazer meu cadastro gratuito',
+}
+
+export const HUBCAP_PADRAO: ConteudoHubcap = {
+  chamada: 'Para gravar sem segurar o celular',
+  titulo: 'O kit da Hub tem fila.',
+  destaque: 'O boné da HubCap resolve enquanto isso.',
+  texto:
+    'O Suporte Oficial HubCap prende o celular na cabeça e só as suas mãos aparecem — que é exatamente o que a Hub Data aprova. Dá para começar a gravar hoje, sem esperar o kit chegar.',
+  vantagens: ['Chega bem mais rápido que o kit', 'Celular firme e estável', 'Só as suas mãos aparecem'],
+  botao: 'Ver o boné com suporte para celular',
+  link: '',
+  rodape: 'Produto oficial · compra segura pelo Mercado Livre.',
+}
+
+export const COMUNIDADE_PADRAO: ConteudoComunidade = {
+  titulo: 'Entre na comunidade Hub Capture e fale direto comigo',
+  texto:
+    'Um grupo para quem grava na Hub Data: contato direto com o Dimitri, respostas rápidas para suas dúvidas, dicas para aprovar mais vídeos e suporte no começo.',
+  beneficios: ['Tire dúvidas direto comigo', 'Suporte mais rápido', 'Avisos de novas tarefas e sorteios'],
+  botao: 'Entrar na comunidade',
+  instagramTexto: 'Bastidores, tutoriais rápidos, resultados de quem já grava e os sorteios do código VEMHUB.',
+}
+
 export const BLOCOS = {
   conteudo_hero: 'Topo da página',
+  conteudo_como_funciona: 'Como funciona',
   tutoriais: 'Tutoriais em vídeo',
+  conteudo_comunidade: 'Comunidade',
+  conteudo_hubcap: 'Boné HubCap',
   faq: 'Perguntas frequentes',
 } as const
 export type Bloco = keyof typeof BLOCOS
@@ -118,4 +177,60 @@ export function validarFaq(valor: unknown): Pergunta[] | null {
     answer: texto((item as Pergunta | null)?.answer, 2000),
   }))
   return lista.every((p) => p.question.length >= 5 && p.answer.length >= 10) ? lista : null
+}
+
+const lista = (valor: unknown, max: number, tamanho: number) =>
+  Array.isArray(valor) ? valor.map((v) => texto(v, tamanho)).filter(Boolean).slice(0, max) : []
+
+export function validarComoFunciona(valor: unknown): ConteudoComoFunciona | null {
+  if (!valor || typeof valor !== 'object') return null
+  const v = valor as Record<string, unknown>
+  const passos = Array.isArray(v.passos)
+    ? v.passos.map((p) => ({ titulo: texto((p as Record<string, unknown>)?.titulo, 60), descricao: texto((p as Record<string, unknown>)?.descricao, 300) }))
+    : []
+  const bloco = { titulo: texto(v.titulo, 120), subtitulo: texto(v.subtitulo, 300), passos, botao: texto(v.botao, 40) }
+  const ok = bloco.titulo && bloco.botao && passos.length >= 2 && passos.length <= 4 && passos.every((p) => p.titulo.length >= 3 && p.descricao.length >= 10)
+  return ok ? bloco : null
+}
+
+/** Link do botão: vazio (usa o oficial do código) ou https. */
+function linkSeguro(valor: unknown) {
+  const link = texto(valor, 300)
+  if (!link) return ''
+  try {
+    return new URL(link).protocol === 'https:' ? link : null
+  } catch {
+    return null
+  }
+}
+
+export function validarHubcap(valor: unknown): ConteudoHubcap | null {
+  if (!valor || typeof valor !== 'object') return null
+  const v = valor as Record<string, unknown>
+  const link = linkSeguro(v.link)
+  if (link === null) return null
+  const bloco: ConteudoHubcap = {
+    chamada: texto(v.chamada, 60),
+    titulo: texto(v.titulo, 80),
+    destaque: texto(v.destaque, 100),
+    texto: texto(v.texto, 500),
+    vantagens: lista(v.vantagens, 3, 50),
+    botao: texto(v.botao, 50),
+    link,
+    rodape: texto(v.rodape, 120),
+  }
+  return bloco.titulo && bloco.texto && bloco.botao ? bloco : null
+}
+
+export function validarComunidade(valor: unknown): ConteudoComunidade | null {
+  if (!valor || typeof valor !== 'object') return null
+  const v = valor as Record<string, unknown>
+  const bloco: ConteudoComunidade = {
+    titulo: texto(v.titulo, 120),
+    texto: texto(v.texto, 500),
+    beneficios: lista(v.beneficios, 3, 50),
+    botao: texto(v.botao, 40),
+    instagramTexto: texto(v.instagramTexto, 300),
+  }
+  return bloco.titulo && bloco.texto && bloco.botao ? bloco : null
 }

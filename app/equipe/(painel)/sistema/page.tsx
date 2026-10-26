@@ -6,6 +6,7 @@ import { estadoVariaveis, statusBanco } from '@/lib/sistema'
 import { AvisoBanco } from '../aviso-banco'
 import { TesteAssistente } from './teste-assistente'
 import { TestePlanilha } from './teste-planilha'
+import { TesteAlerta } from './teste-alerta'
 import { TesteWhatsapp } from './teste-whatsapp'
 
 function dataHora(data: Date) {
@@ -51,6 +52,7 @@ export default async function SistemaPage() {
       <TesteAssistente />
       <TestePlanilha />
       <TesteWhatsapp />
+      <TesteAlerta />
 
       <h2 className="mt-8 text-lg font-semibold">Lembretes automáticos (Meta, pagos)</h2>
       <div className="mt-3 rounded-2xl border border-border bg-card/60 p-4 text-sm">

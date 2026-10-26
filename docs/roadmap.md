@@ -22,7 +22,7 @@ Regras: custo zero sempre que possível (avisar antes se custar), nada de segred
 | 4 | Senha de novo antes de exportar CSV | LGPD e segurança | Grátis | Não | Pequeno |
 | 5 | Backup semanal + alerta de erro por e-mail | Não perder dados | Grátis* | Não | Médio |
 | 6 | Mais blocos editáveis (HubCap, Comunidade, Como funciona) | Autonomia no site | Grátis | Não | Médio |
-| 7 | Upload de vídeo pelo editor (Vercel Blob) | Só se o YouTube não servir | Pode custar | Não | Médio |
+| 7 | Vídeos pelo YouTube no editor (conferência automática) | Grátis e sem limite | Grátis | Não | Pequeno |
 
 \* GitHub Actions é grátis em repositório público. O e-mail usa o plano grátis do Resend (3.000 por mês).
 
@@ -64,18 +64,19 @@ Regras: custo zero sempre que possível (avisar antes se custar), nada de segred
 - Mesmo padrão do topo, tutoriais e FAQ: HubCap (texto, preço, link), Comunidade (textos e links), Como funciona (passos).
 - Pronto quando: editar, publicar e restaurar o original funcionam em cada bloco.
 
-### 7. Upload de vídeo (opcional)
-- Botão "Enviar MP4" no editor de tutoriais, direto para o Vercel Blob (até 100 MB por vídeo).
-- **Atenção ao custo**: o plano grátis tem limite de armazenamento e de transferência, e um vídeo muito assistido passa disso. Só fazer se o YouTube não atender.
+### 7. Vídeos pelo YouTube (decidido: sem Vercel Blob)
+- Botão "Enviar vídeo no YouTube Studio" no editor de tutoriais.
+- Ao colar o link, o editor confere pelo oEmbed do YouTube (grátis, sem chave): título, canal e aviso se o vídeo for privado ou não existir. Opção de usar o título do vídeo no passo.
+- Pronto quando: um link válido mostra título/canal e um vídeo privado ou inexistente mostra o aviso.
 
 ## Status
 
 | # | Item | Status |
 |---|---|---|
-| 1 | Etiquetas e notas | ⏳ |
-| 2 | UTM | ⏳ |
-| 3 | Funil | ⏳ |
-| 4 | Senha para exportar | ⏳ |
-| 5 | Backup + alerta | ⏳ |
-| 6 | Mais blocos | ⏳ |
-| 7 | Upload de vídeo | ⏳ |
+| 1 | Etiquetas e notas | ✅ |
+| 2 | UTM | ✅ |
+| 3 | Funil | ✅ |
+| 4 | Senha para exportar | ✅ |
+| 5 | Backup + alerta | ✅ |
+| 6 | Mais blocos | ✅ |
+| 7 | Vídeos pelo YouTube | ✅ |

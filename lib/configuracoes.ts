@@ -3,7 +3,17 @@ import { eq } from 'drizzle-orm'
 import { configuracoes, getDb } from '@/db'
 import { MODELOS_CADASTRO_PADRAO, MODELOS_COLAB_PADRAO, type ModeloMensagem } from './mensagens'
 import { RESPOSTAS_PRONTAS_PADRAO, type RespostaPronta } from './respostas-prontas'
-import { type ConteudoHero, HERO_PADRAO, type Pergunta } from './conteudo'
+import {
+  COMO_FUNCIONA_PADRAO,
+  COMUNIDADE_PADRAO,
+  type ConteudoComoFunciona,
+  type ConteudoComunidade,
+  type ConteudoHero,
+  type ConteudoHubcap,
+  HERO_PADRAO,
+  HUBCAP_PADRAO,
+  type Pergunta,
+} from './conteudo'
 import { faqs } from './site'
 import { type TutorialStep, tutorialSteps } from './tutorials'
 
@@ -20,6 +30,9 @@ type Chaves = {
   conteudo_hero: ConteudoHero
   tutoriais: TutorialStep[]
   faq: Pergunta[]
+  conteudo_como_funciona: ConteudoComoFunciona
+  conteudo_hubcap: ConteudoHubcap
+  conteudo_comunidade: ConteudoComunidade
 }
 
 const PADROES: Chaves = {
@@ -29,6 +42,9 @@ const PADROES: Chaves = {
   conteudo_hero: HERO_PADRAO,
   tutoriais: tutorialSteps,
   faq: faqs,
+  conteudo_como_funciona: COMO_FUNCIONA_PADRAO,
+  conteudo_hubcap: HUBCAP_PADRAO,
+  conteudo_comunidade: COMUNIDADE_PADRAO,
 }
 
 const CACHE_MS = 60_000
