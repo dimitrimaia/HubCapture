@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import type { Metadata, Viewport } from 'next'
 import { Geist_Mono, Space_Grotesk } from 'next/font/google'
 import { APP_STORE_ID, APP_STORE_URL, IS_INDEXABLE, PLAY_STORE_URL, SITE_URL } from '@/lib/site'
@@ -81,6 +82,7 @@ export default function RootLayout({
       <body className="antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
+        <SpeedInsights />
       </body>
     </html>
   )
