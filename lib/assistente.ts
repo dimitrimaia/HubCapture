@@ -10,6 +10,7 @@ import {
   SITE_URL,
   WHATSAPP_COMMUNITY_URL,
 } from './site'
+import { normalizarPergunta, respostaPronta } from './respostas-prontas'
 import { tutorialSteps } from './tutorials'
 
 /**
@@ -109,9 +110,36 @@ export function limparHistorico(entrada: unknown): MensagemChat[] {
 export type Tentativa = { modelo: string; ok: boolean; status?: number; erro?: string; ms: number }
 export type Diagnostico = { ok: boolean; modelo: string | null; status?: number; erro?: string; tentativas: Tentativa[] }
 
+/**
+ * Cache das PRIMEIRAS perguntas (sem conversa antes): a mesma pergunta de outra pessoa sai do
+ * cache por 24 h sem gastar a cota do Gemini. Fica na memória da instância da Vercel; perguntas
+ * no meio de uma conversa dependem do contexto e sempre vão para o Gemini.
+ */
+const CACHE_MS = 24 * 60 * 60 * 1000
+const CACHE_MAX = 500
+const cacheRespostas = new Map<string, { texto: string; em: number }>()
+
+function chaveCache(historico: MensagemChat[], canal: Canal) {
+  if (historico.length !== 1 || historico[0].role !== 'user') return null
+  const pergunta = normalizarPergunta(historico[0].content)
+  return pergunta.length >= 3 ? `${canal}:${pergunta}` : null
+}
+
 /** Gera a resposta do assistente. Lança AssistenteIndisponivel sem chave ou se o Gemini falhar. */
 export async function gerarResposta(historico: MensagemChat[], canal: Canal): Promise<string> {
+  if (historico.length === 1 && historico[0].role === 'user') {
+    const pronta = respostaPronta(historico[0].content)
+    if (pronta) return pronta
+  }
+  const chave = chaveCache(historico, canal)
+  const guardada = chave ? cacheRespostas.get(chave) : undefined
+  if (guardada && Date.now() - guardada.em < CACHE_MS) return guardada.texto
+
   const resultado = await chamarGemini(historico, canal)
+  if (resultado.ok && chave && !resultado.texto.startsWith('Não consegui responder isso agora')) {
+    if (cacheRespostas.size >= CACHE_MAX) cacheRespostas.delete(cacheRespostas.keys().next().value!)
+    cacheRespostas.set(chave, { texto: resultado.texto, em: Date.now() })
+  }
   if (!resultado.ok) {
     const resumo = resultado.tentativas.map((t) => `${t.modelo}: ${t.status ?? ''} ${t.erro}`).join(' | ')
     throw new AssistenteIndisponivel(`Gemini falhou (${resumo || resultado.erro})`)
