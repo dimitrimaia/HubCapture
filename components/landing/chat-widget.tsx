@@ -3,7 +3,7 @@
 import { Bot, Loader2, MessageCircle, SendHorizontal, X } from 'lucide-react'
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import { waLink } from '@/lib/phone'
-import { WHATSAPP_ATENDIMENTO, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
+import { SITE_URL, WHATSAPP_ATENDIMENTO, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 type Mensagem = { role: 'user' | 'assistant'; content: string; erro?: boolean }
@@ -12,7 +12,7 @@ const CHAVE = 'hubcapture:chat'
 const MAX_HISTORICO = 20
 const MAX_CARACTERES = 1000
 
-const SUGESTOES = ['Como me cadastro?', 'Quanto paga por hora?', 'Como recebo o pagamento?', 'O que é o Minute?']
+const SUGESTOES = ['Tutorial completo', 'Como me cadastro?', 'Quanto paga por hora?', 'Como recebo o pagamento?', 'O que é o Minute?']
 
 const BOAS_VINDAS =
   'Oi! Sou o assistente do **Hub Capture** 👋 Tiro dúvidas sobre cadastro com o código VEMHUB, gravações, pagamentos e o app Minute. Como posso ajudar?'
@@ -156,7 +156,16 @@ export function ChatWidget({ acimaDaModeBar = false }: { acimaDaModeBar?: boolea
             </button>
           </header>
 
-          <div ref={listaRef} className="flex-1 overflow-y-auto px-4 py-4" aria-live="polite">
+          <div
+            ref={listaRef}
+            className="flex-1 overflow-y-auto px-4 py-4"
+            aria-live="polite"
+            onClick={(event) => {
+              // No celular a janela cobre a tela: fecha ao seguir um link do próprio site.
+              const alvo = (event.target as HTMLElement).closest('a[data-interno]')
+              if (alvo && window.matchMedia('(max-width: 639px)').matches) setAberto(false)
+            }}
+          >
             <ul className="flex flex-col gap-3">
               <Balao role="assistant" content={BOAS_VINDAS} />
               {mensagens.map((mensagem, i) => (
@@ -317,12 +326,13 @@ function Inline({ texto }: { texto: string }) {
         const link = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(parte)
         const href = link ? link[2] : parte
         const rotulo = link ? link[1] : parte.replace(/^https?:\/\/(www\.)?/, '')
+        // Links do próprio site abrem na mesma aba (ex.: /tutoriais#passo-3); os de fora, em nova aba.
+        const interno = href.startsWith(SITE_URL)
         return (
           <a
             key={i}
-            href={href}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={interno ? href.slice(SITE_URL.length) || '/' : href}
+            {...(interno ? { 'data-interno': '' } : { target: '_blank', rel: 'noopener noreferrer' })}
             className="font-medium break-words text-primary underline underline-offset-2"
           >
             {rotulo}
