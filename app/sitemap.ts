@@ -1,14 +1,28 @@
 import type { MetadataRoute } from 'next'
-import { CADASTRO_PATH, CONFIAVEL_PATH, GUIA_PATH, QUANTO_PAGA_PATH, SITE_URL, TUTORIAIS_PATH } from '@/lib/site'
+import { CADASTRO_PATH, CONFIAVEL_PATH, GUIA_PATH, QUANTO_PAGA_PATH, SITE_URL, TREINAR_IA_PATH, TUTORIAIS_PATH } from '@/lib/site'
+
+/**
+ * Datas da última mudança REAL de cada página (atualize ao mudar o conteúdo).
+ * Usar "agora" a cada deploy faz o Google parar de confiar na data.
+ */
+const ATUALIZADO = {
+  home: '2026-11-03',
+  guia: '2026-10-20',
+  quantoPaga: '2026-10-20',
+  confiavel: '2026-10-20',
+  treinarIa: '2026-11-03',
+  tutoriais: '2026-10-26',
+  cadastro: '2026-10-26',
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date()
   return [
-    { url: SITE_URL, lastModified, changeFrequency: 'weekly', priority: 1 },
-    { url: `${SITE_URL}${GUIA_PATH}`, lastModified, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${SITE_URL}${QUANTO_PAGA_PATH}`, lastModified, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${SITE_URL}${CONFIAVEL_PATH}`, lastModified, changeFrequency: 'weekly', priority: 0.9 },
-    { url: `${SITE_URL}${TUTORIAIS_PATH}`, lastModified, changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${SITE_URL}${CADASTRO_PATH}`, lastModified, changeFrequency: 'monthly', priority: 0.7 },
+    { url: SITE_URL, lastModified: ATUALIZADO.home, changeFrequency: 'weekly', priority: 1 },
+    { url: `${SITE_URL}${TREINAR_IA_PATH}`, lastModified: ATUALIZADO.treinarIa, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${SITE_URL}${GUIA_PATH}`, lastModified: ATUALIZADO.guia, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${SITE_URL}${QUANTO_PAGA_PATH}`, lastModified: ATUALIZADO.quantoPaga, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${SITE_URL}${CONFIAVEL_PATH}`, lastModified: ATUALIZADO.confiavel, changeFrequency: 'monthly', priority: 0.9 },
+    { url: `${SITE_URL}${TUTORIAIS_PATH}`, lastModified: ATUALIZADO.tutoriais, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${SITE_URL}${CADASTRO_PATH}`, lastModified: ATUALIZADO.cadastro, changeFrequency: 'monthly', priority: 0.7 },
   ]
 }

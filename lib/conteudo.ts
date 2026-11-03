@@ -22,7 +22,7 @@ export type Pergunta = { question: string; answer: string }
 export const HERO_PADRAO: ConteudoHero = {
   titulo: 'Filmou,',
   destaque: 'ganhou.',
-  subtitulo: 'Ganhe dinheiro gravando vídeos com o celular.',
+  subtitulo: 'Ganhe dinheiro gravando vídeos com o app Hub Capture.',
   textoTrabalho:
     'No app Hub Capture, da Hub Data, você grava atividades profissionais reais no seu trabalho, com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX.',
   textoCasa:

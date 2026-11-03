@@ -13,7 +13,7 @@ export function GuidesSection() {
             Tudo o que você precisa saber antes de começar
           </h2>
         </div>
-        <ul className="mt-10 grid gap-4 md:grid-cols-3">
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {guides.map((guide) => (
             <li key={guide.href}>
               <Link
