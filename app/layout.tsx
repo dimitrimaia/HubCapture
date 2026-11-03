@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 })
 
-const title = 'Hub Capture: ganhe dinheiro gravando vídeos com o celular | Hub App e Hub Data — Código VEMHUB'
+// Até ~60 caracteres: o Google corta o resto.
+const title = 'Hub Capture App: ganhe dinheiro gravando vídeos | Hub Data'
 const description =
   'Hub Capture é o app da Hub Data que paga até R$ 50/h para você gravar tarefas em casa ou no trabalho com o celular. Baixe o Hub App, cadastre-se grátis com o código VEMHUB e saque via PIX.'
 
@@ -39,6 +40,9 @@ export const metadata: Metadata = {
     'ganhar dinheiro com o celular',
     'renda extra em casa',
     'treinar inteligência artificial',
+    'ganhar dinheiro treinando ia',
+    'treinamento de robôs remunerado',
+    'renda extra pelo celular',
     'starter kit hub',
   ],
   alternates: { canonical: '/' },

@@ -25,19 +25,20 @@ const dadosEstruturados = (faqs: Pergunta[]) => ({
   '@context': 'https://schema.org',
   '@graph': [
     {
+      // Site PARCEIRO (divulgação com o código de convite), não a Hub Data: nada de se passar pela empresa.
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
-      name: 'Hub Capture',
-      alternateName: ['Hub App', 'Hub Data', 'HubData', 'Hub', 'HubCap'],
+      name: 'Hub Capture · parceiro oficial',
       url: SITE_URL,
       logo: `${SITE_URL}/icon.svg`,
-      sameAs: [INSTAGRAM_URL, PLAY_STORE_URL, APP_STORE_URL],
+      sameAs: [INSTAGRAM_URL],
     },
     {
       '@type': 'WebSite',
       '@id': `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: 'Hub Capture — Hub App e Hub Data',
+      name: 'Hub Capture',
+      alternateName: ['HubCapture', 'Hub Capture App'],
       inLanguage: 'pt-BR',
       publisher: { '@id': `${SITE_URL}/#organization` },
     },
@@ -49,7 +50,6 @@ const dadosEstruturados = (faqs: Pergunta[]) => ({
       applicationCategory: 'BusinessApplication',
       installUrl: [PLAY_STORE_URL, APP_STORE_URL],
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'BRL' },
-      publisher: { '@id': `${SITE_URL}/#organization` },
     },
     {
       '@type': 'HowTo',
