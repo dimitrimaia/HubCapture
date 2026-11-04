@@ -19,6 +19,7 @@ import { useColab } from './colab-dialog'
 import { ctaClasses } from './cta-link'
 import { InstagramIcon } from './instagram-icon'
 import { Logo } from './logo'
+import { SeletorIdioma } from './seletor-idioma'
 import { useMode } from './mode-context'
 import { StoreBadges } from './store-badges'
 import { WhatsappIcon } from './whatsapp-icon'
@@ -95,6 +96,8 @@ export function SiteDrawer() {
                 ))}
               </ul>
             </nav>
+
+            <SeletorIdioma onEscolher={close} className="border-t border-border pt-4" />
 
             <div className="mt-auto flex flex-col gap-3 border-t border-border pt-6">
               <p className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-primary">Baixe o app</p>

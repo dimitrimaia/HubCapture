@@ -1,4 +1,5 @@
 import { APP_STORE_URL, PLAY_STORE_URL } from '@/lib/site'
+import type { Idioma } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
 function GooglePlayIcon({ className }: { className?: string }) {
@@ -23,15 +24,24 @@ function AppleIcon({ className }: { className?: string }) {
   )
 }
 
-const stores = [
-  { href: PLAY_STORE_URL, icon: GooglePlayIcon, overline: 'Disponível no', label: 'Google Play', aria: 'Baixar o app Hub Capture no Google Play' },
-  { href: APP_STORE_URL, icon: AppleIcon, overline: 'Baixar na', label: 'App Store', aria: 'Baixar o app Hub Capture na App Store' },
-]
+const TEXTOS: Record<Idioma, { play: [string, string]; apple: [string, string] }> = {
+  pt: { play: ['Disponível no', 'Baixar o app Hub Capture no Google Play'], apple: ['Baixar na', 'Baixar o app Hub Capture na App Store'] },
+  en: { play: ['Get it on', 'Download the Hub Capture app on Google Play'], apple: ['Download on the', 'Download the Hub Capture app on the App Store'] },
+  es: { play: ['Disponible en', 'Descargar la app Hub Capture en Google Play'], apple: ['Descargar en', 'Descargar la app Hub Capture en la App Store'] },
+}
 
-export function StoreBadges({ className, stacked = false }: { className?: string; stacked?: boolean }) {
+function lojas(idioma: Idioma) {
+  const t = TEXTOS[idioma]
+  return [
+    { href: PLAY_STORE_URL, icon: GooglePlayIcon, overline: t.play[0], label: 'Google Play', aria: t.play[1] },
+    { href: APP_STORE_URL, icon: AppleIcon, overline: t.apple[0], label: 'App Store', aria: t.apple[1] },
+  ]
+}
+
+export function StoreBadges({ className, stacked = false, idioma = 'pt' }: { className?: string; stacked?: boolean; idioma?: Idioma }) {
   return (
     <div className={cn('flex gap-3', stacked ? 'flex-col' : 'flex-wrap', className)}>
-      {stores.map((store) => (
+      {lojas(idioma).map((store) => (
         <a
           key={store.label}
           href={store.href}

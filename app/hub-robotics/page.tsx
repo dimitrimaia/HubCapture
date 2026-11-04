@@ -1,13 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { articleMetadata, ArticleLayout } from '@/components/landing/article-layout'
+import { alternatesIdiomas } from '@/lib/i18n'
 import { CADASTRO_PATH, CONFIAVEL_PATH, GUIA_PATH, HUB_OFICIAL_URL, HUB_ROBOTICS_PATH, QUANTO_PAGA_PATH, TREINAR_IA_PATH } from '@/lib/site'
 
 const title = 'Hub Robotics: o que é a empresa por trás do Hub Capture'
 const description =
   'Hub Robotics (Hub, Hub Data) coleta vídeos de tarefas reais em casas e empresas para treinar robôs e IA. Entenda a empresa, o app Hub Capture e como participar e ganhar por hora.'
 
-export const metadata: Metadata = articleMetadata(HUB_ROBOTICS_PATH, title, description)
+export const metadata: Metadata = { ...articleMetadata(HUB_ROBOTICS_PATH, title, description), alternates: alternatesIdiomas('hubRobotics', 'pt') }
 
 const faqs = [
   {

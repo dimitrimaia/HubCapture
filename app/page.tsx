@@ -16,10 +16,14 @@ import { Tutorial } from '@/components/landing/tutorial'
 import { TutorialsCard } from '@/components/landing/tutorials-card'
 import { obterConfig } from '@/lib/configuracoes'
 import type { Pergunta } from '@/lib/conteudo'
+import { alternatesIdiomas } from '@/lib/i18n'
 import { APP_STORE_URL, CADASTRO_PATH, INSTAGRAM_URL, PLAY_STORE_URL, SITE_URL } from '@/lib/site'
 
 /** Estático, refeito a cada hora ou na hora em que um admin salva um bloco (revalidatePath). */
 export const revalidate = 3600
+
+/** Mesma página em inglês e espanhol (hreflang). */
+export const metadata = { alternates: alternatesIdiomas('inicio', 'pt') }
 
 const dadosEstruturados = (faqs: Pergunta[]) => ({
   '@context': 'https://schema.org',
