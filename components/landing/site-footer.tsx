@@ -6,6 +6,7 @@ import { ColabButton } from './colab-dialog'
 import { CtaLink } from './cta-link'
 import { InstagramIcon } from './instagram-icon'
 import { Logo } from './logo'
+import { SeletorIdioma } from './seletor-idioma'
 import { StoreBadges } from './store-badges'
 import { WhatsappIcon } from './whatsapp-icon'
 
@@ -22,6 +23,7 @@ export function SiteFooter() {
               Hub Capture: grave tarefas do mundo real com o celular no app Hub e ganhe por hora aprovada.
             </p>
             <StoreBadges />
+            <SeletorIdioma className="max-w-xs pt-2" />
           </div>
 
           <nav aria-label="Rodapé" className="flex flex-col gap-3">

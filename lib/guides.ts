@@ -1,3 +1,4 @@
+import { PAGINAS_TRADUZIDAS } from './i18n'
 import { CONFIAVEL_PATH, GUIA_PATH, HUB_ROBOTICS_PATH, QUANTO_PAGA_PATH, TREINAR_IA_PATH } from './site'
 
 export const guides = [
@@ -35,5 +36,12 @@ export const guides = [
     title: 'Hub Robotics: o que é?',
     summary: 'A empresa por trás do Hub Capture, o que ela faz com os vídeos e como participar.',
     cta: 'Conhecer a Hub',
+  },
+  {
+    href: PAGINAS_TRADUZIDAS.convide.pt,
+    tag: 'Indicação',
+    title: 'Convide e Ganhe – Hub Data',
+    summary: 'Como funciona a indicação, onde fica seu link de convite e como divulgar do jeito certo.',
+    cta: 'Ver como funciona',
   },
 ]
