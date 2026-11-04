@@ -15,8 +15,12 @@ export function getDb(): Db | null {
   if (instancia !== undefined) return instancia
   const url = limparUrlBanco(process.env.DATABASE_URL)
   // prepare: false é exigido pelo pooler do Supabase em modo transação (porta 6543).
-  // connect_timeout curto: com URL errada o painel mostra o erro em segundos, não em 30 s.
-  instancia = url ? drizzle(postgres(url, { prepare: false, max: 3, connect_timeout: 10 }), { schema }) : null
+  // Na Vercel cada instância tem seu próprio pool. Sem idle_timeout as conexões paradas ficam
+  // abertas para sempre e, com muito tráfego, esgotam o limite do Supabase grátis: aí as páginas
+  // ficam esperando conexão até dar timeout. Fechar as ociosas em 20 s evita isso.
+  instancia = url
+    ? drizzle(postgres(url, { prepare: false, max: 3, idle_timeout: 20, max_lifetime: 60 * 5, connect_timeout: 15 }), { schema })
+    : null
   return instancia
 }
 

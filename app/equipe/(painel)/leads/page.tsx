@@ -13,13 +13,16 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
   let resumo: Awaited<ReturnType<typeof resumoLeads>> = null
   let etiquetas: string[] = []
   let erroBanco: ReturnType<typeof explicarErroBanco> | null = null
-  try {
-    ;[pagina, resumo, etiquetas] = await Promise.all([paginaLeads(filtros), resumoLeads(), etiquetasEmUso()])
-  } catch (error) {
-    console.error('[equipe] Falha ao ler o banco:', error)
-    erroBanco = explicarErroBanco(error)
-  }
-  const modelos = await obterConfig('modelos_cadastro')
+  // Tudo ao mesmo tempo: a página espera pela consulta mais lenta, não pela soma delas.
+  const [lidos, modelos] = await Promise.all([
+    Promise.all([paginaLeads(filtros), resumoLeads(), etiquetasEmUso()]).catch((error) => {
+      console.error('[equipe] Falha ao ler o banco:', error)
+      erroBanco = explicarErroBanco(error)
+      return null
+    }),
+    obterConfig('modelos_cadastro'),
+  ])
+  if (lidos) [pagina, resumo, etiquetas] = lidos
 
   const linhas: LinhaLead[] | null = pagina
     ? pagina.itens.map((lead) => ({
