@@ -1,4 +1,4 @@
-import { CONFIAVEL_PATH, GUIA_PATH, QUANTO_PAGA_PATH, TREINAR_IA_PATH } from './site'
+import { CONFIAVEL_PATH, GUIA_PATH, HUB_ROBOTICS_PATH, QUANTO_PAGA_PATH, TREINAR_IA_PATH } from './site'
 
 export const guides = [
   {
@@ -11,7 +11,7 @@ export const guides = [
   {
     href: QUANTO_PAGA_PATH,
     tag: 'Pagamentos',
-    title: 'Hub Data: quanto paga?',
+    title: 'Quanto a Hub paga?',
     summary: 'Valores por hora aprovada, categorias, calendário e formas de pagamento.',
     cta: 'Entender os valores',
   },
@@ -28,5 +28,12 @@ export const guides = [
     title: 'Hub Data é confiável?',
     summary: 'Quem é a Hub, o que acontece com os vídeos, privacidade e como evitar golpes.',
     cta: 'Ver a análise',
+  },
+  {
+    href: HUB_ROBOTICS_PATH,
+    tag: 'A empresa',
+    title: 'Hub Robotics: o que é?',
+    summary: 'A empresa por trás do Hub Capture, o que ela faz com os vídeos e como participar.',
+    cta: 'Conhecer a Hub',
   },
 ]

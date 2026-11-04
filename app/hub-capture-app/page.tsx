@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { articleMetadata, ArticleLayout } from '@/components/landing/article-layout'
 import { CADASTRO_PATH, GUIA_PATH, HUBCAP_URL, TUTORIAIS_PATH } from '@/lib/site'
 
-const title = 'Hub Capture: como funciona o app, requisitos e celulares compatíveis'
+const title = 'Hub Capture App: como funciona, download e cadastro grátis'
 const description =
-  'Como funciona o Hub Capture App (Hub App / Hub Data): cadastro com o código VEMHUB, tarefas no Hub Capture e no Minute, requisitos, celulares compatíveis e dicas para ter vídeos aprovados.'
+  'O Hub Capture paga você para gravar sua rotina com o celular. Veja como funciona o app, onde baixar no Android e no iPhone, requisitos, tarefas no Minute e como criar sua conta grátis.'
 
 export const metadata: Metadata = articleMetadata(GUIA_PATH, title, description)
 
