@@ -6,6 +6,7 @@ import { type IdiomaIntl, TEXTOS_INTL } from '@/lib/textos-intl'
 import { ctaClasses } from '../landing/cta-link'
 import { Eyebrow } from '../landing/eyebrow'
 import { StoreBadges } from '../landing/store-badges'
+import { Trilha } from '../landing/trilha'
 import { IntlShell } from './intl-shell'
 
 type Props = {
@@ -32,13 +33,6 @@ export function IntlArtigo({ idioma, pagina, title, description, eyebrow, headin
     '@graph': [
       { '@type': 'Article', headline: title, description, inLanguage: idioma, url, mainEntityOfPage: url, dateModified: '2026-11-04' },
       {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Hub Capture', item: `${SITE_URL}${PAGINAS_TRADUZIDAS.inicio[idioma]}` },
-          { '@type': 'ListItem', position: 2, name: heading, item: url },
-        ],
-      },
-      {
         '@type': 'FAQPage',
         mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
       },
@@ -50,12 +44,7 @@ export function IntlArtigo({ idioma, pagina, title, description, eyebrow, headin
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(dados).replace(/</g, '\\u003c') }} />
       <article className="px-4 pt-10 pb-16 sm:px-6 md:pt-16 md:pb-24">
         <div className="mx-auto max-w-3xl">
-          <nav aria-label={t.artigo.voceEsta} className="mb-6 text-sm text-muted-foreground">
-            <Link href={PAGINAS_TRADUZIDAS.inicio[idioma]} className="hover:text-foreground">
-              Hub Capture
-            </Link>{' '}
-            / <span className="text-foreground">{eyebrow}</span>
-          </nav>
+          <Trilha rotulo={t.artigo.voceEsta} itens={[{ nome: 'Hub Capture', href: PAGINAS_TRADUZIDAS.inicio[idioma] }, { nome: eyebrow }]} />
           <Eyebrow>{eyebrow}</Eyebrow>
           <h1 className="mt-4 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">{heading}</h1>
           <div className="mt-4 text-pretty leading-relaxed text-muted-foreground sm:text-lg [&_strong]:text-foreground">{intro}</div>

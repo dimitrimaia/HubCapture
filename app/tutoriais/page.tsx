@@ -5,6 +5,7 @@ import { CtaLink } from '@/components/landing/cta-link'
 import { Eyebrow } from '@/components/landing/eyebrow'
 import { SiteShell } from '@/components/landing/site-shell'
 import { StoreBadges } from '@/components/landing/store-badges'
+import { Trilha } from '@/components/landing/trilha'
 import { VideoEmbed } from '@/components/landing/video-embed'
 import { SITE_URL, TUTORIAIS_PATH } from '@/lib/site'
 import { obterConfig } from '@/lib/configuracoes'
@@ -62,6 +63,7 @@ export default async function TutoriaisPage() {
       <section aria-labelledby="tutoriais-title" className="px-4 pt-10 pb-16 sm:px-6 md:pt-16 md:pb-24">
         <div className="mx-auto max-w-5xl">
           <div className="max-w-2xl">
+            <Trilha itens={[{ nome: 'Hub Capture', href: '/' }, { nome: 'Tutoriais em vídeo' }]} />
             <Eyebrow>Tutoriais em vídeo</Eyebrow>
             <h1 id="tutoriais-title" className="mt-4 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
               Hub Capture passo a passo: do cadastro ao primeiro PIX

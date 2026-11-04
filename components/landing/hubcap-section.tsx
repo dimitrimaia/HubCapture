@@ -7,18 +7,25 @@ import { Eyebrow } from './eyebrow'
 
 const ICONES = [Timer, Smartphone, Hand]
 
+/**
+ * Produto sobre uma "vitrine" clara: o boné é preto, então num fundo escuro ele sumia.
+ * A base clara + sombra no chão funciona igual nos temas claro e escuro.
+ */
 function CapImage({ className }: { className?: string }) {
   return (
     <div className={className}>
-      <div aria-hidden="true" className="absolute inset-x-[10%] inset-y-[15%] rounded-full bg-primary/25 blur-3xl" />
-      <Image
-        src="/images/bone-hubcap.png"
-        alt="Boné oficial HubCap com suporte para prender o celular e gravar com as mãos livres para a Hub Data"
-        width={538}
-        height={300}
-        sizes="(min-width: 768px) 40vw, 90vw"
-        className="relative h-auto w-full drop-shadow-2xl"
-      />
+      <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(ellipse_at_50%_40%,#ffffff_0%,#eef3f0_55%,#dfe7e2_100%)] px-6 pt-8 pb-10 shadow-[inset_0_0_0_1px_rgb(0_0_0/0.06)] sm:px-10">
+        <div aria-hidden="true" className="absolute -top-16 -right-16 size-48 rounded-full bg-primary/20 blur-3xl" />
+        <Image
+          src="/images/bone-hubcap.webp"
+          alt="Boné oficial HubCap com suporte para prender o celular e gravar com as mãos livres para a Hub Data"
+          width={538}
+          height={300}
+          sizes="(min-width: 768px) 380px, 80vw"
+          className="relative mx-auto h-auto w-full max-w-[380px] drop-shadow-[0_18px_18px_rgb(0_0_0/0.25)]"
+        />
+        <div aria-hidden="true" className="mx-auto -mt-3 h-4 w-2/3 rounded-[50%] bg-black/20 blur-md" />
+      </div>
     </div>
   )
 }
@@ -38,7 +45,7 @@ export function HubcapSection({ conteudo }: { conteudo: ConteudoHubcap }) {
           <h2 id="hubcap-title" className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
             {conteudo.titulo} {conteudo.destaque && <span className="text-primary">{conteudo.destaque}</span>}
           </h2>
-          <CapImage className="relative mx-auto w-full max-w-md md:hidden" />
+          <CapImage className="relative mx-auto w-full max-w-sm md:hidden" />
           <p className="text-pretty leading-relaxed text-muted-foreground">{conteudo.texto}</p>
           <ul className="grid gap-3 sm:grid-cols-3">
             {conteudo.vantagens.map((vantagem, i) => {
