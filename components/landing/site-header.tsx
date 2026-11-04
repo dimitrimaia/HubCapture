@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { headerLinks } from '@/lib/navigation'
-import { PARTNER_TAGLINE } from '@/lib/site'
-import { CtaLink } from './cta-link'
+import { CADASTRO_PATH, PARTNER_TAGLINE } from '@/lib/site'
+import { CtaLink, ctaClasses } from './cta-link'
 import { Logo } from './logo'
+import { MenuGuias } from './menu-guias'
 import { SiteDrawer } from './site-drawer'
 
 export function SiteHeader() {
@@ -24,12 +25,18 @@ export function SiteHeader() {
                 </Link>
               </li>
             ))}
+            <li>
+              <MenuGuias />
+            </li>
           </ul>
         </nav>
         <div className="flex items-center gap-2">
-          <CtaLink variant="outline" size="sm" className="hidden sm:inline-flex">
-            Acessar Plataforma
+          <CtaLink variant="outline" size="sm" external className="hidden xl:inline-flex">
+            Entrar
           </CtaLink>
+          <Link href={CADASTRO_PATH} className={ctaClasses({ size: 'sm', className: 'hidden sm:inline-flex' })}>
+            Cadastrar
+          </Link>
           <SiteDrawer />
         </div>
       </div>

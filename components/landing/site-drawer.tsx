@@ -4,7 +4,7 @@ import { Dialog } from '@base-ui/react/dialog'
 import { HardHat, LogIn, Menu, PlayCircle, Sparkles, UserPlus, X } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
-import { sectionLinks } from '@/lib/navigation'
+import { guiaLinks, headerLinks, sectionLinks } from '@/lib/navigation'
 import { cn } from '@/lib/utils'
 import {
   CADASTRO_PATH,
@@ -25,7 +25,7 @@ import { StoreBadges } from './store-badges'
 import { WhatsappIcon } from './whatsapp-icon'
 
 
-const sectionNav = sectionLinks.filter((item) => !['/#colab', '/#comunidade'].includes(item.href))
+const sectionNav = sectionLinks.filter((item) => !['/#colab', '/#comunidade', '/#guias'].includes(item.href))
 
 export function SiteDrawer() {
   const { mode } = useMode()
@@ -81,14 +81,29 @@ export function SiteDrawer() {
               <DrawerItem href={HUBCAP_URL} external onClick={close} icon={<HardHat className="size-5" aria-hidden="true" />} title="Boné oficial HubCap" subtitle="Grave com as mãos livres hoje" />
             </ul>
 
-            <nav aria-label="Menu" className="border-t border-border pt-4">
+            <nav aria-label="Páginas" className="border-t border-border pt-4">
+              <p className="px-3 pb-1 font-mono text-xs font-medium tracking-[0.2em] text-primary uppercase">Páginas</p>
+              <ul className="flex flex-col">
+                {[...headerLinks.filter((l) => l.href !== TUTORIAIS_PATH), ...guiaLinks].map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      onClick={close}
+                      className="flex min-h-11 items-center rounded-xl px-3 text-sm text-foreground transition-colors outline-none hover:bg-foreground/5 focus-visible:ring-3 focus-visible:ring-ring"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-3 px-3 pb-1 font-mono text-xs font-medium tracking-[0.2em] text-muted-foreground uppercase">Na página inicial</p>
               <ul className="grid grid-cols-2 gap-x-2">
                 {sectionNav.map((item) => (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       onClick={close}
-                      className="flex min-h-11 items-center rounded-xl px-3 text-sm text-muted-foreground transition-colors outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring"
+                      className="flex min-h-10 items-center rounded-xl px-3 text-sm text-muted-foreground transition-colors outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring"
                     >
                       {item.label}
                     </Link>
