@@ -2,6 +2,7 @@ import 'server-only'
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
 import { eq } from 'drizzle-orm'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 import { redirect } from 'next/navigation'
 import { getDb, usuariosEquipe } from '@/db'
 
@@ -72,8 +73,11 @@ function lerToken(token?: string) {
   }
 }
 
-/** Sessão atual, conferida no banco. null = não logado, conta desativada ou sessão encerrada. */
-export async function lerSessao(): Promise<SessaoEquipe | null> {
+/**
+ * Sessão atual, conferida no banco. null = não logado, conta desativada ou sessão encerrada.
+ * cache(): layout e página do mesmo pedido fazem UMA consulta só.
+ */
+export const lerSessao = cache(async function lerSessao(): Promise<SessaoEquipe | null> {
   const token = lerToken((await cookies()).get(COOKIE_EQUIPE)?.value)
   const db = getDb()
   if (!token || !db) return null
@@ -87,7 +91,7 @@ export async function lerSessao(): Promise<SessaoEquipe | null> {
     trocarSenha: usuario.trocarSenha,
     doisFatores: Boolean(usuario.totpSegredo),
   }
-}
+})
 
 export async function salvarSessao(id: string, versao: number) {
   ;(await cookies()).set(COOKIE_EQUIPE, criarToken(id, versao), {
