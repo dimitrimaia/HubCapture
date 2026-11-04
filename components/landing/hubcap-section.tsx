@@ -8,24 +8,26 @@ import { Eyebrow } from './eyebrow'
 const ICONES = [Timer, Smartphone, Hand]
 
 /**
- * Produto sobre uma "vitrine" clara: o boné é preto, então num fundo escuro ele sumia.
- * A base clara + sombra no chão funciona igual nos temas claro e escuro.
+ * Produto "flutuando" no card, sem caixa: um brilho suave atrás e um contorno de luz leve fazem o
+ * boné preto se destacar no tema escuro; no claro o contorno não aparece e fica só a sombra.
  */
 function CapImage({ className }: { className?: string }) {
   return (
     <div className={className}>
-      <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(ellipse_at_50%_40%,#ffffff_0%,#eef3f0_55%,#dfe7e2_100%)] px-6 pt-8 pb-10 shadow-[inset_0_0_0_1px_rgb(0_0_0/0.06)] sm:px-10">
-        <div aria-hidden="true" className="absolute -top-16 -right-16 size-48 rounded-full bg-primary/20 blur-3xl" />
-        <Image
-          src="/images/bone-hubcap.webp"
-          alt="Boné oficial HubCap com suporte para prender o celular e gravar com as mãos livres para a Hub Data"
-          width={538}
-          height={300}
-          sizes="(min-width: 768px) 380px, 80vw"
-          className="relative mx-auto h-auto w-full max-w-[380px] drop-shadow-[0_18px_18px_rgb(0_0_0/0.25)]"
-        />
-        <div aria-hidden="true" className="mx-auto -mt-3 h-4 w-2/3 rounded-[50%] bg-black/20 blur-md" />
-      </div>
+      <div
+        aria-hidden="true"
+        className="absolute inset-[8%] rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklch,var(--foreground)_16%,transparent),transparent)] blur-xl"
+      />
+      <div aria-hidden="true" className="absolute inset-x-[15%] inset-y-[20%] rounded-full bg-primary/20 blur-3xl" />
+      <Image
+        src="/images/bone-hubcap.webp"
+        alt="Boné oficial HubCap com suporte para prender o celular e gravar com as mãos livres para a Hub Data"
+        width={538}
+        height={300}
+        sizes="(min-width: 768px) 400px, 80vw"
+        className="relative mx-auto h-auto w-full max-w-[400px] [filter:drop-shadow(0_0_1px_rgb(255_255_255/0.45))_drop-shadow(0_20px_22px_rgb(0_0_0/0.35))]"
+      />
+      <div aria-hidden="true" className="relative mx-auto -mt-2 h-4 w-1/2 rounded-[50%] bg-black/30 blur-md" />
     </div>
   )
 }
