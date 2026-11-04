@@ -15,6 +15,8 @@ export const GUIA_PATH = '/hub-capture-app'
 export const QUANTO_PAGA_PATH = '/hub-data-quanto-paga'
 export const CONFIAVEL_PATH = '/hub-data-e-confiavel'
 export const TREINAR_IA_PATH = '/ganhar-dinheiro-treinando-ia'
+export const HUB_ROBOTICS_PATH = '/hub-robotics'
+export const HUB_OFICIAL_URL = 'https://hub.xyz'
 
 // Domínio oficial fixo: canonical, sitemap e Open Graph sempre apontam para hubcapture.app
 // (nunca para o *.vercel.app), senão o Google indexa o domínio errado.
