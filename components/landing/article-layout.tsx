@@ -7,6 +7,7 @@ import { CtaLink } from './cta-link'
 import { Eyebrow } from './eyebrow'
 import { SiteShell } from './site-shell'
 import { StoreBadges } from './store-badges'
+import { Trilha } from './trilha'
 
 export type ArticleFaq = { question: string; answer: string }
 
@@ -39,13 +40,6 @@ export function ArticleLayout({ path, title, description, eyebrow, heading, intr
         about: ['Hub Capture', 'Hub App', 'Hub Data'],
       },
       {
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Hub Capture', item: SITE_URL },
-          { '@type': 'ListItem', position: 2, name: heading, item: url },
-        ],
-      },
-      {
         '@type': 'FAQPage',
         mainEntity: faqs.map((faq) => ({
           '@type': 'Question',
@@ -65,12 +59,7 @@ export function ArticleLayout({ path, title, description, eyebrow, heading, intr
       />
       <article className="px-4 pt-10 pb-16 sm:px-6 md:pt-16 md:pb-24">
         <div className="mx-auto max-w-3xl">
-          <nav aria-label="Você está em" className="mb-6 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-foreground">
-              Hub Capture
-            </Link>{' '}
-            / <span className="text-foreground">{eyebrow}</span>
-          </nav>
+          <Trilha itens={[{ nome: 'Hub Capture', href: '/' }, { nome: 'Guias', href: '/#guias' }, { nome: eyebrow }]} />
           <Eyebrow>{eyebrow}</Eyebrow>
           <h1 className="mt-4 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">{heading}</h1>
           <div className="mt-4 text-pretty leading-relaxed text-muted-foreground sm:text-lg [&_strong]:text-foreground">{intro}</div>

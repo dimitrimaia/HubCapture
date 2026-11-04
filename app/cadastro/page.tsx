@@ -1,4 +1,5 @@
 import { BadgeCheck } from 'lucide-react'
+import { Trilha } from '@/components/landing/trilha'
 import type { Metadata } from 'next'
 import { CommunityLinks } from '@/components/landing/community-section'
 import { CopyCodeButton } from '@/components/landing/copy-code-button'
@@ -33,6 +34,7 @@ export default function CadastroPage() {
       <section aria-labelledby="cadastro-title" className="px-4 pt-10 pb-16 sm:px-6 md:pt-16 md:pb-24">
         <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[1fr_1.05fr] lg:items-start lg:gap-12">
           <div className="flex flex-col gap-5">
+            <Trilha itens={[{ nome: 'Hub Capture', href: '/' }, { nome: 'Cadastro' }]} />
             <Eyebrow>Cadastro com VEMHUB</Eyebrow>
             <h1 id="cadastro-title" className="text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
               Crie sua conta no <span className="text-primary">Hub Capture</span>
