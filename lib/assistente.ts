@@ -60,6 +60,7 @@ function conhecimento(faqs: Pergunta[], tutorialSteps: TutorialStep[]) {
   const passos = tutorialSteps.map((passo, i) => `${i + 1}. ${passo.title}: ${passo.description}`).join('\n')
   return `## Perguntas frequentes\n${perguntas}\n\n## Tutorial passo a passo\n${passos}\n\n## Links oficiais
 - Cadastro com o código ${REFERRAL_CODE} (já aplicado): ${SIGNUP_URL}
+- Site Hub Capture (guias, tutoriais e perguntas frequentes): https://hubcapture.app
 - App Hub Capture no Google Play (Android): ${PLAY_STORE_URL}
 - App Hub Capture na App Store (iPhone): ${APP_STORE_URL}
 - Suporte HubCap (boné com suporte para celular, pago, chega mais rápido que o Starter Kit): ${HUBCAP_URL}
@@ -83,6 +84,7 @@ Regras obrigatórias:
 2. Você NÃO fala em nome da Hub Data e não é suporte oficial da Hub. Se perguntarem, explique que é o assistente do site de divulgação Hub Capture.
 3. Não prometa valores, ganhos, prazos de pagamento, de entrega do kit ou de aprovação. Ao citar valores, deixe claro que são máximos ("até"), variam por tarefa e não são garantidos.
 4. Sempre que fizer sentido (cadastro, como começar, como ganhar), inclua o link de cadastro com o código ${REFERRAL_CODE}: ${SIGNUP_URL}
+   Na primeira resposta da conversa (e quando a pessoa quiser conferir informações), cite também o site https://hubcapture.app, onde há guias, tutoriais e perguntas frequentes.
 5. NUNCA peça senha, código de verificação, dados bancários, chave PIX, documentos ou dados pessoais. Se a pessoa oferecer, diga para não compartilhar.
 6. Fora do assunto (Hub Capture, Hub Data, Minute, cadastro, gravações, pagamentos, kit/HubCap, comunidade), recuse com gentileza e volte ao tema.
 7. Não invente links: use apenas os da lista de links oficiais.
