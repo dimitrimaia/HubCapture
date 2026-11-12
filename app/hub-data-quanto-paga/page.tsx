@@ -5,7 +5,7 @@ import { CONFIAVEL_PATH, QUANTO_PAGA_PATH, TUTORIAIS_PATH } from '@/lib/site'
 
 const title = 'Quanto a Hub paga? Valor por hora, pagamento e quem participa'
 const description =
-  'Quanto a Hub (Hub Data) paga no Hub Capture: até R$ 35/h em casa e até R$ 50/h no trabalho por hora aprovada, como recebe via PIX, quem pode participar e o que conta como hora aprovada.'
+  'Quanto a Hub (Hub Data) paga no Hub Capture: de R$ 10 a R$ 75 por hora aprovada, como recebe via PIX, quem pode participar e o que conta como hora aprovada.'
 
 export const metadata: Metadata = articleMetadata(QUANTO_PAGA_PATH, title, description)
 
@@ -13,7 +13,7 @@ const faqs = [
   {
     question: 'Quanto a Hub Data paga por hora?',
     answer:
-      'Até R$ 35 por hora aprovada em tarefas de casa (modo Residencial) e até R$ 50 por hora aprovada em atividades profissionais (modo Comercial). São valores máximos, que variam por tarefa e campanha.',
+      'De R$ 10 a R$ 75 por hora aprovada, conforme a tarefa e a categoria, em casa (modo Residencial) ou em atividades profissionais (modo Comercial). São valores máximos, que variam por tarefa e campanha.',
   },
   {
     question: 'Quando a Hub Data paga?',
@@ -60,11 +60,11 @@ export default function QuantoPagaPage() {
       <h2 id="valores">Valores por hora na Hub Data</h2>
       <ul>
         <li>
-          <strong>Modo Residencial (casa):</strong> até R$ 35 por hora aprovada, em tarefas como cozinhar, lavar louça,
+          <strong>Modo Residencial (casa):</strong> valor por hora aprovada definido em cada tarefa no app, em tarefas como cozinhar, lavar louça,
           dobrar roupas e organizar.
         </li>
         <li>
-          <strong>Modo Comercial (trabalho):</strong> até R$ 50 por hora aprovada, gravando atividades profissionais
+          <strong>Modo Comercial (trabalho):</strong> de R$ 10 a R$ 75 por hora aprovada, conforme a categoria (ex.: escritórios R$ 45/h, floriculturas R$ 60/h, saúde e reciclagem R$ 75/h), gravando atividades profissionais
           reais durante o expediente.
         </li>
       </ul>

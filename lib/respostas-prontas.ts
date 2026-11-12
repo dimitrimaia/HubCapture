@@ -71,8 +71,8 @@ Depois vem o kit, o app Minute e a primeira gravação: peça o **tutorial compl
     gatilhos: ['Quanto paga por hora?', 'quanto paga', 'quanto ganha', 'quanto eu ganho'],
     resposta: `Os valores são por **hora de gravação aprovada**:
 
-- **Casa (Residencial):** até R$ 35/h
-- **Trabalho (Comercial):** até R$ 50/h
+- **Casa (Residencial):** valor de cada tarefa no app
+- **Trabalho (Comercial):** de R$ 10 a R$ 75/h, conforme a categoria
 
 São valores máximos, que variam por tarefa, e não há ganho garantido: só o tempo aprovado na verificação de qualidade conta. Para começar, faça o [cadastro com o VEMHUB](${SIGNUP_URL}).`,
   },

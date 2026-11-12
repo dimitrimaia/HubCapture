@@ -54,7 +54,7 @@ export const faqs = [
   {
     question: 'Quanto a Hub Data paga por hora?',
     answer:
-      'Até R$ 35 por hora aprovada em tarefas em casa (modo Residencial) e até R$ 50 por hora aprovada em atividades profissionais (modo Comercial). Só o tempo aprovado na verificação de qualidade é pago. Os valores são máximos e podem variar por tarefa.',
+      'De R$ 10 a R$ 75 por hora aprovada, conforme a tarefa, em casa (modo Residencial) ou em atividades profissionais (modo Comercial). Só o tempo aprovado na verificação de qualidade é pago. O valor de cada tarefa aparece no app e pode mudar.',
   },
   {
     question: 'O que é o código VEMHUB?',
