@@ -1,5 +1,5 @@
 export const REFERRAL_CODE = 'VEMHUB'
-export const PARTNER_TAGLINE = 'Parceiro oficial'
+export const PARTNER_TAGLINE = 'Site independente'
 
 export const SIGNUP_URL = 'https://app.hub.xyz/r/VEMHUB'
 export const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=xyz.hub.mobile&hl=pt_BR'
@@ -59,7 +59,7 @@ export const faqs = [
   {
     question: 'O que é o código VEMHUB?',
     answer:
-      'VEMHUB é o código de convite oficial para se cadastrar na Hub. Ao criar sua conta com o código VEMHUB, você entra com acesso ao Starter Kit grátis e participa dos sorteios exclusivos divulgados neste site.',
+      'VEMHUB é o nosso código de convite para se cadastrar na Hub. Ao criar sua conta com o código VEMHUB, você entra com acesso ao Starter Kit grátis e participa dos sorteios exclusivos divulgados neste site.',
   },
   {
     question: 'Como recebo o pagamento?',
@@ -69,7 +69,7 @@ export const faqs = [
   {
     question: 'Preciso pagar alguma coisa para participar?',
     answer:
-      'Não. O cadastro é gratuito e o Starter Kit (faixa de cabeça e suporte para celular) é enviado sem custo, mas pode demorar a chegar. Quem preferir pode comprar o Suporte Oficial HubCap (boné com suporte), que é opcional e chega bem mais rápido. Você não precisa indicar amigos, assistir anúncios nem comprar nada para receber.',
+      'Não. O cadastro é gratuito e o Starter Kit (faixa de cabeça e suporte para celular) é enviado sem custo, mas pode demorar a chegar. Quem preferir pode comprar o Suporte HubCap (boné com suporte), que é opcional e chega bem mais rápido. Você não precisa indicar amigos, assistir anúncios nem comprar nada para receber.',
   },
   {
     question: 'Preciso aparecer nos vídeos ou ter seguidores?',

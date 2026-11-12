@@ -28,7 +28,7 @@ const faqs = [
   {
     question: 'Preciso de equipamento para gravar?',
     answer:
-      'Só do celular e de um suporte de cabeça. O Starter Kit é grátis, mas pode demorar a chegar; quem quiser começar no mesmo dia pode usar o Suporte Oficial HubCap, um boné com suporte para celular.',
+      'Só do celular e de um suporte de cabeça. O Starter Kit é grátis, mas pode demorar a chegar; quem quiser começar no mesmo dia pode usar o Suporte HubCap, um boné com suporte para celular.',
   },
 ]
 
@@ -98,7 +98,7 @@ export default function GuiaPage() {
         <li>Celular Android ou iPhone com câmera traseira em bom estado e lente limpa.</li>
         <li>Espaço livre de armazenamento para os vídeos antes do envio.</li>
         <li>Bateria carregada e internet (de preferência Wi-Fi) para enviar as gravações.</li>
-        <li>Suporte de cabeça: Starter Kit grátis ou o Suporte Oficial HubCap.</li>
+        <li>Suporte de cabeça: Starter Kit grátis ou o Suporte HubCap.</li>
         <li>No modo Comercial, autorização do responsável pelo local de trabalho.</li>
       </ul>
 
@@ -110,7 +110,7 @@ export default function GuiaPage() {
         <li>
           Peça o Starter Kit grátis no painel ou adquira o{' '}
           <a href={HUBCAP_URL} target="_blank" rel="noopener noreferrer">
-            Suporte Oficial HubCap
+            Suporte HubCap
           </a>
           , que chega mais rápido.
         </li>

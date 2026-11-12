@@ -38,7 +38,7 @@ export function SeoArticle() {
 
         <h3>Como se cadastrar com o código VEMHUB</h3>
         <p>
-          O cadastro é gratuito. Use o <strong>código de convite oficial VEMHUB</strong> para criar sua conta, receber o
+          O cadastro é gratuito. Use o <strong>código de convite VEMHUB</strong> para criar sua conta, receber o
           Starter Kit grátis e participar dos sorteios exclusivos. Depois é só baixar o app Hub Capture — e, se quiser mais tarefas, vincular o app Minute com o mesmo e-mail —, escolher a
           organização Residencial ou Comercial e começar a gravar.
         </p>

@@ -57,7 +57,7 @@ export function SiteFooter() {
               @hubcapture no Instagram
             </a>
             <a href={HUBCAP_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
-              Boné oficial HubCap
+              Boné HubCap
             </a>
             <ColabButton variant="outline" size="sm" className="mt-1" />
             <CtaLink size="sm" withArrow className="mt-1">
@@ -67,7 +67,22 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-2 border-t border-border pt-6 text-xs text-muted-foreground sm:flex-row sm:justify-between">
-          <p>{`© ${new Date().getFullYear()} Hub Capture. Divulgação do programa Hub Data com o código de convite VEMHUB.`}</p>
+          <div className="flex max-w-3xl flex-col gap-2">
+            <p>
+              <strong className="text-foreground">Este não é o site oficial da Hub.</strong> O Hub Capture (hubcapture.app) é um site
+              independente, mantido por um participante que divulga o código de convite VEMHUB. Não é administrado, aprovado nem
+              patrocinado pela Hub Data, Inc. ou pela HUB AGENCIA DE DADOS LTDA. Nomes e marcas citados pertencem aos seus donos.
+            </p>
+            <p>
+              Não é emprego nem investimento: os ganhos variam e não são garantidos. Valores, regras e Termos de Uso oficiais estão em{' '}
+              <a href="https://hub.xyz" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+                hub.xyz
+              </a>{' '}
+              e no app. Participar é gratuito: ninguém pode cobrar taxa para você entrar. O boné HubCap é um produto opcional, não
+              exigido pela Hub.
+            </p>
+            <p>{`© ${new Date().getFullYear()} Hub Capture.`}</p>
+          </div>
           <a
             href={SIGNUP_URL}
             target="_blank"

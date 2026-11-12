@@ -72,7 +72,7 @@ export const HUBCAP_PADRAO: ConteudoHubcap = {
   titulo: 'O kit da Hub tem fila.',
   destaque: 'O boné da HubCap resolve enquanto isso.',
   texto:
-    'O Suporte Oficial HubCap prende o celular na cabeça e só as suas mãos aparecem — que é exatamente o que a Hub Data aprova. Dá para começar a gravar hoje, sem esperar o kit chegar.',
+    'O Suporte HubCap prende o celular na cabeça e só as suas mãos aparecem — que é exatamente o que a Hub Data aprova. Dá para começar a gravar hoje, sem esperar o kit chegar.',
   vantagens: ['Chega bem mais rápido que o kit', 'Celular firme e estável', 'Só as suas mãos aparecem'],
   botao: 'Ver o boné com suporte para celular',
   link: '',

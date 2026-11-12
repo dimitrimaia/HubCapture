@@ -46,11 +46,11 @@ export type TextosIntl = {
 
 export const TEXTOS_INTL: Record<IdiomaIntl, TextosIntl> = {
   en: {
-    tagline: 'Official partner',
+    tagline: 'Independent site',
     nav: { inicio: 'Home', convide: 'Invite & Earn', hubRobotics: 'Hub Robotics', cadastrar: 'Sign up', menu: 'Pages' },
     rodape: {
       sobre: 'Hub Capture: record real-world tasks with your phone in the Hub app and get paid for every approved hour.',
-      aviso: `Partner site promoting the Hub Data program with invite code ${REFERRAL_CODE}. This is not Hub's official website.`,
+      aviso: `Independent site run by a participant who shares invite code ${REFERRAL_CODE}. It is not Hub's official website and is not run, endorsed or sponsored by Hub Data, Inc. Earnings vary and are not guaranteed; official rates and terms are at hub.xyz.`,
       paginas: 'Pages',
       comunidade: 'Community',
       whatsapp: 'WhatsApp community (Portuguese)',
@@ -127,11 +127,11 @@ export const TEXTOS_INTL: Record<IdiomaIntl, TextosIntl> = {
     },
   },
   es: {
-    tagline: 'Socio oficial',
+    tagline: 'Sitio independiente',
     nav: { inicio: 'Inicio', convide: 'Invita y Gana', hubRobotics: 'Hub Robotics', cadastrar: 'Registrarse', menu: 'Páginas' },
     rodape: {
       sobre: 'Hub Capture: graba tareas del mundo real con tu celular en la app Hub y gana por cada hora aprobada.',
-      aviso: `Sitio socio que difunde el programa Hub Data con el código de invitación ${REFERRAL_CODE}. No es el sitio oficial de Hub.`,
+      aviso: `Sitio independiente de un participante que comparte el código de invitación ${REFERRAL_CODE}. No es el sitio oficial de Hub ni está administrado, avalado o patrocinado por Hub Data, Inc. Las ganancias varían y no están garantizadas; valores y términos oficiales en hub.xyz.`,
       paginas: 'Páginas',
       comunidade: 'Comunidad',
       whatsapp: 'Comunidad en WhatsApp (portugués)',

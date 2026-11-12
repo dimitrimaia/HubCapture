@@ -6,7 +6,7 @@ import { Eyebrow } from './eyebrow'
 const benefits = [
   {
     icon: ShieldCheck,
-    title: 'Código oficial',
+    title: 'Código de convite',
     description: 'Convite reconhecido pela plataforma. Sua conta fica vinculada ao programa sem nenhum custo.',
   },
   {
@@ -36,7 +36,7 @@ export function CodeSection() {
         />
         <div className="relative grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center">
           <div className="flex flex-col gap-5">
-            <Eyebrow>Código de convite oficial</Eyebrow>
+            <Eyebrow>Código de convite</Eyebrow>
             <h2 id="codigo-title" className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
               Use o código <span className="text-primary">VEMHUB</span> no cadastro e concorra a prêmios
             </h2>

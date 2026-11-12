@@ -78,7 +78,7 @@ export function SiteDrawer() {
               <DrawerItem href={WHATSAPP_COMMUNITY_URL} external highlight onClick={close} icon={<WhatsappIcon className="size-5" />} title="Comunidade no WhatsApp" subtitle="Dúvidas e suporte direto comigo" />
               <DrawerItem onClick={() => { close(); openColab() }} icon={<Sparkles className="size-5" aria-hidden="true" />} title="Colab com Influencers" subtitle="Seja parceiro do Hub Capture" />
               <DrawerItem href={INSTAGRAM_URL} external onClick={close} icon={<InstagramIcon className="size-5" />} title="Instagram @hubcapture" subtitle="Novidades e sorteios" />
-              <DrawerItem href={HUBCAP_URL} external onClick={close} icon={<HardHat className="size-5" aria-hidden="true" />} title="Boné oficial HubCap" subtitle="Grave com as mãos livres hoje" />
+              <DrawerItem href={HUBCAP_URL} external onClick={close} icon={<HardHat className="size-5" aria-hidden="true" />} title="Boné HubCap" subtitle="Grave com as mãos livres hoje" />
             </ul>
 
             <nav aria-label="Páginas" className="border-t border-border pt-4">

@@ -32,7 +32,7 @@ const dadosEstruturados = (faqs: Pergunta[]) => ({
       // Site PARCEIRO (divulgação com o código de convite), não a Hub Data: nada de se passar pela empresa.
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
-      name: 'Hub Capture · parceiro oficial',
+      name: 'Hub Capture · site independente de divulgação',
       url: SITE_URL,
       logo: `${SITE_URL}/icon.svg`,
       sameAs: [INSTAGRAM_URL],

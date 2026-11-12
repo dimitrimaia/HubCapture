@@ -30,9 +30,9 @@ export const tutorialSteps: TutorialStep[] = [
     youtubeId: '',
   },
   {
-    title: 'Peça o Starter Kit ou o Suporte Oficial HubCap',
+    title: 'Peça o Starter Kit ou o Suporte HubCap',
     description:
-      'Solicite o Starter Kit no seu painel: ele é grátis, mas pode demorar a chegar. Se preferir, adquira o Suporte Oficial HubCap (boné com suporte para celular), que chega bem mais rápido, é mais confortável e estável — garantindo vídeos de melhor qualidade e maior aprovação.',
+      'Solicite o Starter Kit no seu painel: ele é grátis, mas pode demorar a chegar. Se preferir, adquira o Suporte HubCap (boné com suporte para celular), que chega bem mais rápido, é mais confortável e estável — garantindo vídeos de melhor qualidade e maior aprovação.',
     youtubeId: '',
   },
   {
