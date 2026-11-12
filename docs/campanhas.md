@@ -54,3 +54,7 @@ Na Vercel grátis, só sobem commits de quem é dono da conta, a não ser que o 
 ligado à conta da Vercel não for o mesmo usuário que faz os merges, o deploy de produção fica "Blocked". O botão
 Redeploy reaproveita o deploy bloqueado: para publicar, é preciso um commit novo no main.
 
+## Link dos botões das mensagens: use /continuar
+Quem recebe a campanha já deixou nome e WhatsApp. Nos botões "Acessar o site" dos modelos, use
+`https://hubcapture.app/continuar` (sem formulário, só o próximo passo com o código já aplicado), e não `/cadastro`.
+
