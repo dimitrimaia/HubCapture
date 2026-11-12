@@ -15,7 +15,8 @@ respostas e falhas. As respostas chegam na aba **Atendimento**, com a mensagem d
 ## Configurar (uma vez)
 1. A Cloud API do WhatsApp precisa estar funcionando (`docs/whatsapp.md`): `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`,
    `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` e o webhook apontando para `https://hubcapture.app/api/whatsapp`.
-2. **`WHATSAPP_WABA_ID`**: Meta → WhatsApp Manager → **Visão geral da conta** → "ID da conta do WhatsApp Business".
+2. **Variáveis novas só valem depois de um deploy novo.** Se o painel avisar "Configure WHATSAPP_WABA_ID e WHATSAPP_TOKEN", confira se as duas estão marcadas para Production e publique de novo.
+3. **`WHATSAPP_WABA_ID`**: Meta → WhatsApp Manager → **Visão geral da conta** → "ID da conta do WhatsApp Business".
    É com ele que o painel lista os modelos aprovados.
 3. **Token permanente:** o token temporário do painel de desenvolvedor vence em 24 h. Crie um **usuário do sistema**
    (Configurações do negócio → Usuários do sistema), dê acesso ao app e à conta do WhatsApp com as permissões
