@@ -175,3 +175,65 @@ export async function enviarModelo(para: string, modelo: string, parametros: str
 export function pediuParaSair(texto: string) {
   return /^\s*(sair|parar|pare|stop|cancelar|descadastrar|remover)\s*[.!]*\s*$/i.test(texto)
 }
+
+/* ───────────── Campanhas: modelos aprovados e status de entrega ───────────── */
+
+export type ModeloMeta = {
+  nome: string
+  idioma: string
+  categoria: string
+  /** Texto do corpo, com {{1}}, {{2}}… */
+  texto: string
+  variaveis: number
+  /** Modelos com cabeçalho de mídia ou botões dinâmicos ainda não são suportados no disparo. */
+  suportado: boolean
+}
+
+/**
+ * Lista os modelos APROVADOS da conta do WhatsApp Business (precisa de WHATSAPP_WABA_ID:
+ * Meta → WhatsApp Manager → Visão geral da conta → ID da conta).
+ */
+export async function listarModelosAprovados(): Promise<ModeloMeta[]> {
+  const waba = process.env.WHATSAPP_WABA_ID
+  if (!waba || !process.env.WHATSAPP_TOKEN) throw new Error('Configure WHATSAPP_WABA_ID e WHATSAPP_TOKEN na Vercel.')
+  const versao = process.env.WHATSAPP_API_VERSION || 'v23.0'
+  const base = process.env.WHATSAPP_API_BASE || 'https://graph.facebook.com'
+  const url = `${base}/${versao}/${waba}/message_templates?status=APPROVED&limit=200&fields=name,language,category,components`
+  const resposta = await fetch(url, { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` }, cache: 'no-store', signal: AbortSignal.timeout(15000) })
+  if (!resposta.ok) throw new Error(`WhatsApp API ${resposta.status}: ${(await resposta.text().catch(() => '')).slice(0, 300)}`)
+  const dados = (await resposta.json()) as {
+    data?: { name: string; language: string; category: string; components?: { type: string; text?: string; format?: string; buttons?: { type: string; url?: string }[] }[] }[]
+  }
+  return (dados.data ?? []).map((m) => {
+    const corpo = m.components?.find((c) => c.type === 'BODY')?.text ?? ''
+    const cabecalho = m.components?.find((c) => c.type === 'HEADER')
+    const botoes = m.components?.find((c) => c.type === 'BUTTONS')?.buttons ?? []
+    const variaveis = new Set(corpo.match(/\{\{\d+\}\}/g) ?? []).size
+    const cabecalhoVariavel = Boolean(cabecalho && (cabecalho.format !== 'TEXT' || /\{\{\d+\}\}/.test(cabecalho.text ?? '')))
+    const botaoVariavel = botoes.some((b) => b.type === 'URL' && /\{\{\d+\}\}/.test(b.url ?? ''))
+    return { nome: m.name, idioma: m.language, categoria: m.category, texto: corpo, variaveis, suportado: !cabecalhoVariavel && !botaoVariavel }
+  })
+}
+
+export type StatusEntrega = { wamid: string; status: 'sent' | 'delivered' | 'read' | 'failed'; erro?: string }
+
+/** Atualizações de status do webhook (enviada, entregue, lida, falhou), para acompanhar campanhas. */
+export function lerStatuses(payload: unknown): StatusEntrega[] {
+  const dados = payload as { object?: string; entry?: { changes?: { field?: string; value?: { statuses?: unknown[] } }[] }[] }
+  if (dados?.object !== 'whatsapp_business_account') return []
+  const lista: StatusEntrega[] = []
+  for (const entrada of dados.entry ?? []) {
+    for (const mudanca of entrada.changes ?? []) {
+      for (const s of (mudanca.value?.statuses ?? []) as { id?: string; status?: string; errors?: { title?: string; message?: string; code?: number }[] }[]) {
+        if (!s.id || !['sent', 'delivered', 'read', 'failed'].includes(s.status ?? '')) continue
+        const e = s.errors?.[0]
+        lista.push({
+          wamid: s.id,
+          status: s.status as StatusEntrega['status'],
+          ...(e ? { erro: `${e.code ?? ''} ${e.title ?? e.message ?? ''}`.trim().slice(0, 300) } : {}),
+        })
+      }
+    }
+  }
+  return lista
+}

@@ -5,8 +5,9 @@ import { AVISO_HUMANO, pediuHumano, pedirHumano, registrarDoCliente, registrarMe
 import { marcarRespondeuWhatsapp } from '@/lib/leads'
 import { variantesE164 } from '@/lib/phone'
 import { SIGNUP_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
+import { aplicarStatuses } from '@/lib/campanhas'
 import { marcarOptOut } from '@/lib/lembretes'
-import { assinaturaValida, enviarTexto, lerMensagens, marcarComoLida, type MensagemRecebida, pediuParaSair, whatsappConfigurado } from '@/lib/whatsapp'
+import { assinaturaValida, enviarTexto, lerMensagens, lerStatuses, marcarComoLida, type MensagemRecebida, pediuParaSair, whatsappConfigurado } from '@/lib/whatsapp'
 import { carregarConversa, mensagemNova, salvarConversa } from '@/lib/whatsapp-memoria'
 
 export const maxDuration = 60
@@ -38,6 +39,10 @@ export async function POST(request: Request) {
   } catch {
     return new Response(null, { status: 400 })
   }
+
+  // Status de entrega das campanhas (enviada, entregue, lida, falhou).
+  const statuses = lerStatuses(payload)
+  if (statuses.length > 0) after(() => aplicarStatuses(statuses).catch((error) => registrarErro('campanhas', error)))
 
   const mensagens = lerMensagens(payload)
   if (mensagens.length > 0) {

@@ -5,6 +5,7 @@ import {
   ExternalLink,
   Handshake,
   Headset,
+  Send,
   LayoutList,
   LogOut,
   Menu,
@@ -38,6 +39,7 @@ const GRUPOS = [
     titulo: 'Administração',
     admin: true,
     itens: [
+      { href: '/equipe/campanhas', rotulo: 'Campanhas WhatsApp', icone: Send },
       { href: '/equipe/resultados', rotulo: 'Resultados', icone: ChartColumn },
       { href: '/equipe/mensagens', rotulo: 'Mensagens e respostas', icone: MessageSquareText },
       { href: '/equipe/usuarios', rotulo: 'Usuários', icone: Users },
