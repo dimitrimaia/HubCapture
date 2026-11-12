@@ -23,7 +23,11 @@ respostas e falhas. As respostas chegam na aba **Atendimento**, com a mensagem d
 4. **`WHATSAPP_LIMITE_DIARIO`**: o nível do seu número no WhatsApp Manager (250, 1000, 10000…). Padrão: 250.
 5. **Agendador** (para continuar com o painel fechado): no cron-job.org, a cada 10 minutos, chame
    `https://hubcapture.app/api/cron/campanhas` com o cabeçalho `Authorization: Bearer SEU_CRON_SECRET`.
-6. No webhook da Meta, o campo **messages** precisa estar assinado: é por ele que chegam as respostas e os status
+6. **Verify token do webhook** (`WHATSAPP_VERIFY_TOKEN`): um texto que você inventa, igual na Vercel e na Meta.
+   Use **só letras, números e hífen** (ex.: `hubcap-webhook-x8k3m9q2t7`) e **nunca** uma senha real. Depois de mudar na
+   Vercel, o site só usa o valor novo após um deploy novo. Teste no navegador:
+   `https://hubcapture.app/api/whatsapp?hub.mode=subscribe&hub.challenge=123&hub.verify_token=SEU_TOKEN` deve mostrar `123`.
+7. No webhook da Meta, o campo **messages** precisa estar assinado: é por ele que chegam as respostas e os status
    (entregue, lida, falhou).
 
 ## Criar e disparar
