@@ -29,6 +29,13 @@
       "when": 1793032461983,
       "tag": "0003_atendimento",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794511071940,
+      "tag": "0004_campanhas",
+      "breakpoints": true
     }
   ]
 }

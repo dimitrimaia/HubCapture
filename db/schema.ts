@@ -212,3 +212,53 @@ export const mensagensAtendimento = pgTable(
   },
   (tabela) => [index('mensagens_atendimento_idx').on(tabela.atendimentoId, tabela.criadoEm), unique('mensagens_atendimento_chave').on(tabela.atendimentoId, tabela.chave)],
 )
+
+/**
+ * Campanhas de disparo no WhatsApp (modelos aprovados na Meta). Só para quem aceitou receber
+ * mensagens. status: rascunho | enviando | pausada | concluida | cancelada.
+ */
+export const campanhas = pgTable('campanhas', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  nome: text('nome').notNull(),
+  modelo: text('modelo').notNull(),
+  idioma: text('idioma').notNull().default('pt_BR'),
+  categoria: text('categoria'),
+  /** Texto do modelo (para mostrar no painel e no histórico das conversas). */
+  textoModelo: text('texto_modelo'),
+  /** O que preenche {{1}}, {{2}}…: "nome" (primeiro nome do cadastro) ou um texto fixo. */
+  variaveis: jsonb('variaveis').$type<{ tipo: 'nome' | 'fixo'; valor?: string }[]>().notNull().default(sql`'[]'::jsonb`),
+  filtros: jsonb('filtros').$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
+  status: text('status').notNull().default('rascunho'),
+  total: integer('total').notNull().default(0),
+  criadoPor: text('criado_por'),
+  criadoEm: timestamp('criado_em', { withTimezone: true }).notNull().defaultNow(),
+  iniciadoEm: timestamp('iniciado_em', { withTimezone: true }),
+  concluidoEm: timestamp('concluido_em', { withTimezone: true }),
+})
+
+/**
+ * Um envio por pessoa por campanha (UNIQUE: nunca manda duas vezes a mesma campanha para a mesma
+ * pessoa). status: pendente | enviando | enviado | entregue | lido | falhou.
+ */
+export const campanhaEnvios = pgTable(
+  'campanha_envios',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    campanhaId: uuid('campanha_id')
+      .notNull()
+      .references(() => campanhas.id, { onDelete: 'cascade' }),
+    leadId: uuid('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+    telefone: text('telefone').notNull(),
+    nome: text('nome'),
+    status: text('status').notNull().default('pendente'),
+    wamid: text('wamid'),
+    erro: text('erro'),
+    enviadoEm: timestamp('enviado_em', { withTimezone: true }),
+    atualizadoEm: timestamp('atualizado_em', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (tabela) => [
+    unique('campanha_envios_unico').on(tabela.campanhaId, tabela.telefone),
+    index('campanha_envios_status_idx').on(tabela.campanhaId, tabela.status),
+    index('campanha_envios_wamid_idx').on(tabela.wamid),
+  ],
+)

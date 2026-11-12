@@ -21,6 +21,8 @@ export const VARIAVEIS = [
   { nome: 'LEMBRETES_WHATSAPP', para: '"ligado" ativa os lembretes pagos' },
   { nome: 'WHATSAPP_MODELO_LEMBRETE_1', para: 'Modelo aprovado do 1º lembrete' },
   { nome: 'WHATSAPP_MODELO_LEMBRETE_2', para: 'Modelo aprovado do 2º lembrete' },
+  { nome: 'WHATSAPP_WABA_ID', para: 'Campanhas: lista os modelos aprovados na Meta' },
+  { nome: 'WHATSAPP_LIMITE_DIARIO', para: 'Campanhas: contatos por dia (nível do número na Meta; padrão 250)' },
   { nome: 'RESEND_API_KEY', para: 'Alerta de erro por e-mail (Resend, grátis)' },
   { nome: 'ALERTA_EMAIL', para: 'E-mail que recebe os alertas' },
 ] as const

@@ -288,3 +288,30 @@ export async function responder(id: string, sessao: SessaoEquipe, texto: string,
   }
   return { ok: true as const }
 }
+
+/**
+ * Mensagem enviada por campanha: aparece no histórico da conversa (aba Atendimento), sem contar
+ * como não lida. Se a pessoa responder, a conversa já está lá, com o contexto do disparo.
+ */
+export async function registrarEnvioCampanha(dados: { telefone: string; nome?: string | null; leadId?: string | null; texto: string; campanha: string; wamid?: string | null }) {
+  const db = getDb()
+  if (!db) return
+  const contato = dados.telefone.replace(/\D/g, '')
+  const agora = new Date()
+  const [atendimento] = await db
+    .insert(atendimentos)
+    .values({ canal: 'whatsapp', contato, nome: dados.nome ?? null, leadId: dados.leadId ?? null, naoLidas: 0, ultimaMensagem: previa(dados.texto), ultimaMensagemEm: agora })
+    .onConflictDoUpdate({
+      target: [atendimentos.canal, atendimentos.contato],
+      set: {
+        nome: sql`coalesce(${atendimentos.nome}, excluded.nome)`,
+        leadId: sql`coalesce(${atendimentos.leadId}, excluded.lead_id)`,
+        ultimaMensagem: previa(dados.texto),
+        ultimaMensagemEm: agora,
+      },
+    })
+    .returning({ id: atendimentos.id })
+  await db
+    .insert(mensagensAtendimento)
+    .values({ atendimentoId: atendimento.id, autor: 'atendente', autorNome: `Campanha · ${dados.campanha}`, texto: dados.texto.slice(0, 4000), wamid: dados.wamid ?? null })
+}
