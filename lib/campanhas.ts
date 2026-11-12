@@ -3,8 +3,10 @@ import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm'
 import { campanhaEnvios, campanhas, getDb, leads } from '@/db'
 import { registrarEnvioCampanha } from './atendimento'
 import { registrarErro } from './auditoria'
+import { marcarChamado } from './leads'
 import { primeiroNome } from './mensagens'
 import { enviarModelo, type StatusEntrega } from './whatsapp'
+import { carregarConversa, salvarConversa } from './whatsapp-memoria'
 
 /**
  * Campanhas de disparo no WhatsApp com modelos aprovados na Meta.
@@ -178,14 +180,12 @@ export async function processarLote(id: string) {
       const wamid = await enviarModelo(envio.telefone, campanha.modelo, parametros, campanha.idioma)
       await db.update(campanhaEnvios).set({ status: 'enviado', wamid, enviadoEm: new Date(), atualizadoEm: new Date() }).where(eq(campanhaEnvios.id, envio.id))
       enviados += 1
-      await registrarEnvioCampanha({
-        telefone: envio.telefone,
-        nome: envio.nome,
-        leadId: envio.lead_id,
-        texto: textoFinal(campanha.textoModelo ?? `[modelo ${campanha.modelo}]`, parametros),
-        campanha: campanha.nome,
-        wamid,
-      }).catch(() => null)
+      const texto = textoFinal(campanha.textoModelo ?? `[modelo ${campanha.modelo}]`, parametros)
+      await registrarEnvioCampanha({ telefone: envio.telefone, nome: envio.nome, leadId: envio.lead_id, texto, campanha: campanha.nome, wamid }).catch(() => null)
+      // Conta como contato: a Fila não chama de novo quem acabou de receber (próxima etapa em 2 dias).
+      if (envio.lead_id) await marcarChamado(envio.lead_id, `Campanha · ${campanha.nome}`, `campanha:${campanha.modelo}`).catch(() => null)
+      // A IA do WhatsApp passa a "lembrar" do que foi enviado: se a pessoa responder, continua com contexto.
+      await lembrarNaConversa(envio.telefone, texto).catch(() => null)
     } catch (error) {
       const erro = (error instanceof Error ? error.message : String(error)).slice(0, 300)
       await db.update(campanhaEnvios).set({ status: 'falhou', erro, atualizadoEm: new Date() }).where(eq(campanhaEnvios.id, envio.id))
@@ -289,4 +289,17 @@ export async function campanhasEnviando() {
   const db = getDb()
   if (!db) return []
   return db.select({ id: campanhas.id }).from(campanhas).where(eq(campanhas.status, 'enviando'))
+}
+
+/** Coloca a mensagem da campanha na memória do assistente do WhatsApp (contexto da próxima resposta). */
+async function lembrarNaConversa(telefone: string, texto: string) {
+  const numero = telefone.replace(/\D/g, '')
+  const historico = await carregarConversa(numero)
+  // O histórico precisa começar por uma fala da pessoa (limparHistorico corta o que vem antes):
+  // por isso uma linha de contexto antes da mensagem enviada.
+  await salvarConversa(numero, [
+    ...historico,
+    { role: 'user', content: '(Contexto interno: o Hub Capture enviou a mensagem a seguir para esta pessoa por uma campanha no WhatsApp.)' },
+    { role: 'assistant', content: texto },
+  ])
 }
