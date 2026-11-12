@@ -54,7 +54,7 @@ export function Hero({ conteudo }: { conteudo: ConteudoHero }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-            <span>Código oficial:</span>
+            <span>Código de convite:</span>
             <CopyCodeButton size="sm" />
           </div>
 

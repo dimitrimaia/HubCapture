@@ -18,7 +18,7 @@ const modes = [
     icon: Briefcase,
     tag: 'Profissional',
     title: 'Ganhe por hora no trabalho',
-    rate: 'R$ 50',
+    rate: 'R$ 75',
     image: '/images/mode-professional.png',
     alt: 'Visão em primeira pessoa de mãos consertando um motor em uma oficina',
     items: [

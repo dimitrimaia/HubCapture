@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 // Até ~60 caracteres: o Google corta o resto.
 const title = 'Hub Capture App: ganhe dinheiro gravando vídeos | Hub Data'
 const description =
-  'Hub Capture é o app da Hub Data que paga até R$ 50/h para você gravar tarefas em casa ou no trabalho com o celular. Baixe o Hub App, cadastre-se grátis com o código VEMHUB e saque via PIX.'
+  'Hub Capture é o app da Hub Data que paga de R$ 10 a R$ 75 por hora aprovada, conforme a tarefa, para você gravar tarefas em casa ou no trabalho com o celular. Baixe o Hub App, cadastre-se grátis com o código VEMHUB e saque via PIX.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

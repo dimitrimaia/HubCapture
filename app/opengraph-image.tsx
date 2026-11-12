@@ -34,7 +34,7 @@ export default function OpengraphImage() {
             Filmou, ganhou.
           </div>
           <div style={{ display: 'flex', fontSize: 38, color: '#a9bdb2', maxWidth: 950 }}>
-            Ganhe até R$ 50/h gravando vídeos com o celular no Hub App da Hub Data.
+            Tarefas de R$ 10 a R$ 75/h gravando vídeos com o celular no Hub App da Hub Data.
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 20, fontSize: 30 }}>

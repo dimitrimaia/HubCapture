@@ -62,7 +62,7 @@ function conhecimento(faqs: Pergunta[], tutorialSteps: TutorialStep[]) {
 - Cadastro com o código ${REFERRAL_CODE} (já aplicado): ${SIGNUP_URL}
 - App Hub Capture no Google Play (Android): ${PLAY_STORE_URL}
 - App Hub Capture na App Store (iPhone): ${APP_STORE_URL}
-- Suporte Oficial HubCap (boné com suporte para celular, pago, chega mais rápido que o Starter Kit): ${HUBCAP_URL}
+- Suporte HubCap (boné com suporte para celular, pago, chega mais rápido que o Starter Kit): ${HUBCAP_URL}
 - Comunidade do Hub Capture no WhatsApp: ${WHATSAPP_COMMUNITY_URL}
 - Instagram: ${INSTAGRAM_URL}
 - Tutoriais em vídeo: ${SITE_URL}/tutoriais`

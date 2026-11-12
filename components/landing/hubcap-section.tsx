@@ -21,7 +21,7 @@ function CapImage({ className }: { className?: string }) {
       <div aria-hidden="true" className="absolute inset-x-[15%] inset-y-[20%] rounded-full bg-primary/20 blur-3xl" />
       <Image
         src="/images/bone-hubcap.webp"
-        alt="Boné oficial HubCap com suporte para prender o celular e gravar com as mãos livres para a Hub Data"
+        alt="Boné HubCap com suporte para prender o celular e gravar com as mãos livres para a Hub Data"
         width={538}
         height={300}
         sizes="(min-width: 768px) 400px, 80vw"

@@ -27,7 +27,7 @@ export const HERO_PADRAO: ConteudoHero = {
     'No app Hub Capture, da Hub Data, você grava atividades profissionais reais no seu trabalho, com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX.',
   textoCasa:
     'No app Hub Capture, da Hub Data, você grava tarefas do dia a dia em casa — cozinhar, organizar, lavar — com o celular na faixa de cabeça. Os vídeos treinam inteligência artificial e você recebe por hora aprovada, via PIX.',
-  valorTrabalho: 'R$ 50',
+  valorTrabalho: 'R$ 75',
   valorCasa: 'R$ 35',
   destaques: ['Cadastro gratuito', 'Starter Kit grátis', 'Saque via PIX'],
 }
@@ -72,7 +72,7 @@ export const HUBCAP_PADRAO: ConteudoHubcap = {
   titulo: 'O kit da Hub tem fila.',
   destaque: 'O boné da HubCap resolve enquanto isso.',
   texto:
-    'O Suporte Oficial HubCap prende o celular na cabeça e só as suas mãos aparecem — que é exatamente o que a Hub Data aprova. Dá para começar a gravar hoje, sem esperar o kit chegar.',
+    'O Suporte HubCap prende o celular na cabeça e só as suas mãos aparecem — que é exatamente o que a Hub Data aprova. Dá para começar a gravar hoje, sem esperar o kit chegar.',
   vantagens: ['Chega bem mais rápido que o kit', 'Celular firme e estável', 'Só as suas mãos aparecem'],
   botao: 'Ver o boné com suporte para celular',
   link: '',

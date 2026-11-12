@@ -47,14 +47,14 @@ export function Tutorial() {
           <TutorialStep number={1} title="Crie sua conta com o código VEMHUB">
             <p>
               Toque em <strong className="text-foreground">Cadastrar</strong>, preencha seus dados e, no campo de
-              convite, use o código oficial. Pelo link deste site ele já vem preenchido.
+              convite, use o código de convite. Pelo link deste site ele já vem preenchido.
             </p>
             <div className="mt-4">
               <CopyCodeButton size="sm" />
             </div>
           </TutorialStep>
 
-          <TutorialStep number={2} title="Peça o Starter Kit ou o Suporte Oficial HubCap">
+          <TutorialStep number={2} title="Peça o Starter Kit ou o Suporte HubCap">
             <div className="grid gap-5 sm:grid-cols-[1fr_12rem] sm:items-center">
               <div>
                 <p>
@@ -72,7 +72,7 @@ export function Tutorial() {
                   )}
                 </ul>
                 <p className="mt-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 text-sm">
-                  Prefere começar já? O <strong className="text-foreground">Suporte Oficial HubCap</strong> (boné com
+                  Prefere começar já? O <strong className="text-foreground">Suporte HubCap</strong> (boné com
                   suporte) chega bem mais rápido, é mais confortável e estável, garantindo vídeos de melhor qualidade e
                   maior aprovação.{' '}
                   <a href={HUBCAP_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline-offset-4 hover:underline">

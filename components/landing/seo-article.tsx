@@ -11,7 +11,7 @@ export function SeoArticle() {
           empresa de inteligência artificial, e o <strong>Hub Capture</strong> (o <strong>Hub App</strong>) é o
           aplicativo oficial dela, uma plataforma que paga pessoas comuns para gravar tarefas reais em primeira pessoa.
           Você prende o celular em uma faixa de cabeça, faz uma atividade do começo ao fim e recebe{' '}
-          <strong>até R$ 35 por hora aprovada em casa</strong> ou <strong>até R$ 50 por hora no trabalho</strong>, com
+          <strong>de R$ 10 a R$ 75 por hora aprovada</strong>, conforme a tarefa, com
           saque via PIX.
         </p>
         <p>
@@ -38,7 +38,7 @@ export function SeoArticle() {
 
         <h3>Como se cadastrar com o código VEMHUB</h3>
         <p>
-          O cadastro é gratuito. Use o <strong>código de convite oficial VEMHUB</strong> para criar sua conta, receber o
+          O cadastro é gratuito. Use o <strong>código de convite VEMHUB</strong> para criar sua conta, receber o
           Starter Kit grátis e participar dos sorteios exclusivos. Depois é só baixar o app Hub Capture — e, se quiser mais tarefas, vincular o app Minute com o mesmo e-mail —, escolher a
           organização Residencial ou Comercial e começar a gravar.
         </p>

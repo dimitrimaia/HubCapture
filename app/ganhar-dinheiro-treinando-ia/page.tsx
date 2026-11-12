@@ -86,8 +86,8 @@ export default function TreinarIaPage() {
 
       <h2 id="quanto-paga">Quanto dá para ganhar treinando IA</h2>
       <p>
-        As tarefas pagam <strong>até R$ 35 por hora aprovada</strong> no modo casa e <strong>até R$ 50 por hora</strong> no
-        modo trabalho. São valores máximos, que mudam conforme a tarefa e a campanha, e só o tempo aprovado conta. Os
+        As tarefas pagam <strong>de R$ 10 a R$ 75 por hora aprovada</strong>, conforme a tarefa e a
+        categoria. São valores máximos, que mudam conforme a tarefa e a campanha, e só o tempo aprovado conta. Os
         pagamentos são semanais, via PIX. Veja os detalhes em <Link href={QUANTO_PAGA_PATH}>Hub Data: quanto paga</Link>.
       </p>
 
