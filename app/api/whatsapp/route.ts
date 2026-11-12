@@ -19,8 +19,9 @@ const SEM_ASSISTENTE = `Recebi sua mensagem! Agora não consigo responder automa
 /** Verificação do webhook pela Meta: devolve hub.challenge se o hub.verify_token bater. */
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams
-  const token = process.env.WHATSAPP_VERIFY_TOKEN
-  if (params.get('hub.mode') === 'subscribe' && token && params.get('hub.verify_token') === token) {
+  // trim: espaço ou quebra de linha colados sem querer na Vercel/Meta fazem a verificação falhar.
+  const token = process.env.WHATSAPP_VERIFY_TOKEN?.trim()
+  if (params.get('hub.mode') === 'subscribe' && token && params.get('hub.verify_token')?.trim() === token) {
     return new Response(params.get('hub.challenge') ?? '', { status: 200, headers: { 'Content-Type': 'text/plain' } })
   }
   return new Response('Forbidden', { status: 403 })
