@@ -47,3 +47,9 @@ Dá para os dois sites **enviarem** com o mesmo número (mesmo token e `WHATSAPP
 **um único endereço de webhook**: as **respostas e os status** chegam em um site só. Duas opções:
 - **Um número por site** (o mais organizado): cada site com seu número e seu webhook.
 - **Um painel central:** disparar e atender tudo por este painel, e deixar o outro site só com o chat do site.
+
+## Deploy bloqueado na Vercel ("commit author doesn't have permission")
+Na Vercel grátis, só sobem commits de quem é dono da conta, a não ser que o repositório seja público. Se o GitHub
+ligado à conta da Vercel não for o mesmo usuário que faz os merges, o deploy de produção fica "Blocked". O botão
+Redeploy reaproveita o deploy bloqueado: para publicar, é preciso um commit novo no main.
+
