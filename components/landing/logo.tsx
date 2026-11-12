@@ -20,7 +20,7 @@ export function Logo({ className, tagline }: { className?: string; tagline?: str
           Hub <span className="text-primary">Capture</span>
         </span>
         {tagline && (
-          <span className="font-mono text-[8px] uppercase tracking-[0.2em] text-foreground/90">{tagline}</span>
+          <span className="font-mono text-[7px] uppercase tracking-[0.08em] text-foreground/60">{tagline}</span>
         )}
       </span>
     </span>
