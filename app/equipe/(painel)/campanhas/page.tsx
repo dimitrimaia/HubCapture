@@ -5,7 +5,8 @@ import { LIMITE_DIARIO, listarCampanhas } from '@/lib/campanhas'
 import { exigirSessaoPagina } from '@/lib/equipe'
 import { explicarErroBanco } from '@/lib/leads'
 import { AvisoBanco } from '../aviso-banco'
-import { dataCurta, Selo } from '../ui'
+import { dataCurta } from '../formatos'
+import { Selo } from '../ui'
 
 export const metadata: Metadata = { title: 'Campanhas' }
 
