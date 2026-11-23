@@ -143,7 +143,7 @@ export async function pedirHumano(atendimentoId: string) {
 
 /* ───────────── Painel ───────────── */
 
-export const FILTROS_ATENDIMENTO = ['fila', 'meus', 'humano', 'bot', 'resolvida', 'todas'] as const
+export const FILTROS_ATENDIMENTO = ['fila', 'responderam', 'meus', 'humano', 'bot', 'resolvida', 'todas'] as const
 export type FiltroAtendimento = (typeof FILTROS_ATENDIMENTO)[number]
 
 export async function listarAtendimentos(f: { filtro: FiltroAtendimento; canal?: string; busca?: string; sessao: SessaoEquipe }) {
@@ -155,6 +155,8 @@ export async function listarAtendimentos(f: { filtro: FiltroAtendimento; canal?:
   if (f.filtro === 'humano') condicoes.push(eq(atendimentos.status, 'humano'))
   if (f.filtro === 'bot') condicoes.push(eq(atendimentos.status, 'bot'))
   if (f.filtro === 'resolvida') condicoes.push(eq(atendimentos.status, 'resolvida'))
+  // Quem escreveu pelo menos uma vez (ex.: respondeu à campanha), não importa o status.
+  if (f.filtro === 'responderam') condicoes.push(sql`${atendimentos.ultimaDoClienteEm} is not null`)
   if (f.canal === 'site' || f.canal === 'whatsapp') condicoes.push(eq(atendimentos.canal, f.canal))
   const termo = f.busca?.trim()
   if (termo) {
@@ -171,8 +173,13 @@ export async function listarAtendimentos(f: { filtro: FiltroAtendimento; canal?:
     .select()
     .from(atendimentos)
     .where(condicoes.length ? and(...condicoes) : undefined)
-    .orderBy(desc(atendimentos.ultimaMensagemEm))
-    .limit(100)
+    .orderBy(
+      ...(f.filtro === 'responderam'
+        ? // Não lidas primeiro, depois a resposta mais recente (campanhas enviadas depois não empurram para baixo).
+          [desc(sql`${atendimentos.naoLidas} > 0`), desc(atendimentos.ultimaDoClienteEm)]
+        : [desc(atendimentos.ultimaMensagemEm)]),
+    )
+    .limit(f.filtro === 'responderam' ? 300 : 100)
 }
 
 /** Números para as abas e o selo do menu. */
@@ -186,6 +193,8 @@ export async function contagemAtendimento(sessao: SessaoEquipe) {
       meusNaoLidas: sql<number>`coalesce(sum(${atendimentos.naoLidas}) filter (where ${atendimentos.status} = 'humano' and ${atendimentos.atendenteId} = ${sessao.id}), 0)::int`,
       humano: sql<number>`count(*) filter (where ${atendimentos.status} = 'humano')::int`,
       bot24h: sql<number>`count(*) filter (where ${atendimentos.status} = 'bot' and ${atendimentos.ultimaMensagemEm} > now() - interval '24 hours')::int`,
+      // Responderam e ninguém abriu ainda.
+      responderam: sql<number>`count(*) filter (where ${atendimentos.ultimaDoClienteEm} is not null and ${atendimentos.naoLidas} > 0)::int`,
     })
     .from(atendimentos)
   return linha
