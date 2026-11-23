@@ -22,7 +22,7 @@ type Item = {
   temCadastro: boolean
   janelaAberta: boolean
 }
-type Contagem = { fila: number; meus: number; meusNaoLidas: number; humano: number; bot24h: number } | null
+type Contagem = { fila: number; responderam: number; meus: number; meusNaoLidas: number; humano: number; bot24h: number } | null
 type Detalhe = Omit<Item, 'naoLidas' | 'ultimaMensagem' | 'ultimaMensagemEm' | 'temCadastro'> & {
   whatsapp: string | null
   leadId: string | null
@@ -83,6 +83,7 @@ function Midia({ midia }: { midia: { tipo: string; id: string } }) {
 
 const ABAS = [
   { id: 'fila', rotulo: 'Na fila' },
+  { id: 'responderam', rotulo: 'Responderam' },
   { id: 'meus', rotulo: 'Minhas' },
   { id: 'humano', rotulo: 'Com a equipe' },
   { id: 'bot', rotulo: 'Com o robô' },
@@ -104,6 +105,7 @@ function IconeCanal({ canal, className }: { canal: Item['canal']; className?: st
 function contagemDaAba(id: string, c: Contagem) {
   if (!c) return null
   if (id === 'fila') return c.fila
+  if (id === 'responderam') return c.responderam
   if (id === 'meus') return c.meus
   if (id === 'humano') return c.humano
   return null
@@ -185,7 +187,7 @@ export function CentralAtendimento({ modelos, atendente, inicial }: { modelos: M
                 >
                   {a.rotulo}
                   {n ? (
-                    <span className={cn('rounded-full px-1.5 text-[10px] font-bold tabular-nums', aba === a.id ? 'bg-primary-foreground/20' : a.id === 'fila' ? 'bg-destructive text-white' : 'bg-foreground/10')}>
+                    <span className={cn('rounded-full px-1.5 text-[10px] font-bold tabular-nums', aba === a.id ? 'bg-primary-foreground/20' : a.id === 'fila' ? 'bg-destructive text-white' : a.id === 'responderam' ? 'bg-primary text-primary-foreground' : 'bg-foreground/10')}>
                       {n}
                     </span>
                   ) : null}
