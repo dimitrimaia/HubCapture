@@ -284,6 +284,17 @@ export async function aplicarStatuses(statuses: StatusEntrega[]) {
             : sql`coalesce(case ${campanhaEnvios.status} when 'enviado' then 1 when 'entregue' then 2 when 'lido' then 3 else 0 end, 0) < ${ordem[novo]}`,
         ),
       )
+    // Vistos de qualquer mensagem (respostas da equipe e do assistente). Só avança: enviado → entregue → lido.
+    // Sem a atualização 6 rodada, a tabela não existe e isto é ignorado.
+    await db
+      .execute(
+        sql`insert into whatsapp_status (wamid, status, erro) values (${s.wamid}, ${novo}, ${s.erro ?? null})
+            on conflict (wamid) do update set status = excluded.status, erro = coalesce(excluded.erro, whatsapp_status.erro), atualizado_em = now()
+            where excluded.status = 'falhou'
+               or (case whatsapp_status.status when 'enviado' then 1 when 'entregue' then 2 when 'lido' then 3 else 0 end)
+                < (case excluded.status when 'enviado' then 1 when 'entregue' then 2 when 'lido' then 3 else 0 end)`,
+      )
+      .catch(() => null)
   }
 }
 
@@ -326,20 +337,41 @@ export async function listarCampanhas() {
     .limit(50)
 }
 
-export async function detalheCampanha(id: string) {
+export async function detalheCampanha(id: string, filtro: 'todos' | 'falhas' = 'todos') {
   const db = getDb()
   if (!db || !/^[0-9a-f-]{36}$/i.test(id)) return null
   const lista = await listarCampanhas()
   const resumo = lista?.find((c) => c.id === id)
   if (!resumo) return null
   const [campanha] = await db.select().from(campanhas).where(eq(campanhas.id, id))
-  const envios = await db
-    .select({ telefone: campanhaEnvios.telefone, nome: campanhaEnvios.nome, status: campanhaEnvios.status, erro: campanhaEnvios.erro, enviadoEm: campanhaEnvios.enviadoEm })
-    .from(campanhaEnvios)
-    .where(eq(campanhaEnvios.campanhaId, id))
-    .orderBy(desc(campanhaEnvios.atualizadoEm))
-    .limit(200)
-  return { ...resumo, textoModelo: campanha.textoModelo, variaveis: campanha.variaveis, filtros: limparFiltros(campanha.filtros), envios }
+  const colunas = {
+    telefone: campanhaEnvios.telefone,
+    nome: campanhaEnvios.nome,
+    status: campanhaEnvios.status,
+    erro: campanhaEnvios.erro,
+    enviadoEm: campanhaEnvios.enviadoEm,
+    leadId: campanhaEnvios.leadId,
+    invalido: sql<boolean>`(${leads.numeroInvalidoEm} is not null or ${leads.optOutEm} is not null)`,
+  }
+  const daCampanha = eq(campanhaEnvios.campanhaId, id)
+  const soFalhas = and(daCampanha, eq(campanhaEnvios.status, 'falhou'))
+  const [envios, falhas] = await Promise.all([
+    db
+      .select(colunas)
+      .from(campanhaEnvios)
+      .leftJoin(leads, eq(leads.id, campanhaEnvios.leadId))
+      .where(filtro === 'falhas' ? soFalhas : daCampanha)
+      .orderBy(desc(campanhaEnvios.atualizadoEm))
+      .limit(filtro === 'falhas' ? 2000 : 200),
+    // Todas as falhas (só o necessário) para o resumo por motivo.
+    db
+      .select({ erro: campanhaEnvios.erro, leadId: campanhaEnvios.leadId, invalido: colunas.invalido })
+      .from(campanhaEnvios)
+      .leftJoin(leads, eq(leads.id, campanhaEnvios.leadId))
+      .where(soFalhas)
+      .limit(5000),
+  ])
+  return { ...resumo, textoModelo: campanha.textoModelo, variaveis: campanha.variaveis, filtros: limparFiltros(campanha.filtros), envios, falhasLista: falhas }
 }
 
 /** Campanhas que estão enviando (para o cron continuar mesmo com o painel fechado). */

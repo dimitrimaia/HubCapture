@@ -5,6 +5,7 @@ import { LIMITE_DIARIO, listarCampanhas } from '@/lib/campanhas'
 import { exigirSessaoPagina } from '@/lib/equipe'
 import { explicarErroBanco } from '@/lib/leads'
 import { AvisoBanco } from '../aviso-banco'
+import { COTACAO_BRL, custoCampanha, formatarBrl, formatarUsd } from '@/lib/campanhas-info'
 import { dataCurta } from '../formatos'
 import { Selo } from '../ui'
 
@@ -55,7 +56,9 @@ export default async function CampanhasPage() {
           Nenhuma campanha ainda. Crie a primeira em <strong className="text-foreground">Nova campanha</strong>.
         </p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-2xl border border-border bg-card/60">
+        <>
+        <ResumoGastos lista={lista} />
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-border bg-card/60">
           <table className="w-full text-sm tabular-nums">
             <thead className="border-b border-border text-left text-xs text-muted-foreground">
               <tr>
@@ -65,7 +68,8 @@ export default async function CampanhasPage() {
                 <th className="px-2 py-2 text-right font-medium">Entregues</th>
                 <th className="px-2 py-2 text-right font-medium">Lidas</th>
                 <th className="px-2 py-2 text-right font-medium">Responderam</th>
-                <th className="px-4 py-2 text-right font-medium">Falhas</th>
+                <th className="px-2 py-2 text-right font-medium">Falhas</th>
+                <th className="px-4 py-2 text-right font-medium" title="Só mensagens entregues são cobradas">Gasto</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -92,13 +96,47 @@ export default async function CampanhasPage() {
                   <td className="px-2 py-2.5 text-right">
                     {c.responderam} <span className="text-xs text-muted-foreground">{pct(c.responderam, c.total)}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-right">{c.falhas}</td>
+                  <td className="px-2 py-2.5 text-right">{c.falhas}</td>
+                  <td className="px-4 py-2.5 text-right whitespace-nowrap">{formatarUsd(custoCampanha(c.categoria, c.entregues).usd)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        </>
       )}
+    </>
+  )
+}
+
+type ItemLista = { categoria: string | null; entregues: number; falhas: number; iniciadoEm: Date | null }
+
+/** Total gasto (só entregues são cobradas), no mês atual e desde o início. */
+function ResumoGastos({ lista }: { lista: ItemLista[] }) {
+  const mesAtual = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }).slice(0, 7)
+  const soma = (itens: ItemLista[]) => itens.reduce((t, c) => ({ usd: t.usd + custoCampanha(c.categoria, c.entregues).usd, entregues: t.entregues + c.entregues, falhas: t.falhas + c.falhas }), { usd: 0, entregues: 0, falhas: 0 })
+  const mes = soma(lista.filter((c) => c.iniciadoEm && c.iniciadoEm.toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' }).startsWith(mesAtual)))
+  const total = soma(lista)
+  const cartoes = [
+    { rotulo: 'Gasto neste mês', valor: formatarUsd(mes.usd), sub: `≈ ${formatarBrl(mes.usd * COTACAO_BRL)} · ${mes.entregues} entregues` },
+    { rotulo: 'Gasto total', valor: formatarUsd(total.usd), sub: `≈ ${formatarBrl(total.usd * COTACAO_BRL)} · ${total.entregues} entregues` },
+    { rotulo: 'Falhas (não cobradas)', valor: String(total.falhas), sub: 'Abra a campanha para ver o motivo' },
+  ]
+  return (
+    <>
+      <dl className="mt-6 grid gap-3 sm:grid-cols-3">
+        {cartoes.map((c) => (
+          <div key={c.rotulo} className="rounded-2xl border border-border bg-card/60 p-4">
+            <dt className="text-xs text-muted-foreground">{c.rotulo}</dt>
+            <dd className="mt-1 text-xl font-semibold tabular-nums">{c.valor}</dd>
+            <dd className="text-xs text-muted-foreground">{c.sub}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-xs text-muted-foreground">
+        Estimativa: a Meta cobra só mensagens entregues (marketing ≈ US$ 0,0625 no Brasil; real ≈ US$ 1 = R$ {COTACAO_BRL.toFixed(2).replace('.', ',')}). O valor exato está na
+        fatura da Meta (Configurações do negócio → Cobrança e pagamentos).
+      </p>
     </>
   )
 }

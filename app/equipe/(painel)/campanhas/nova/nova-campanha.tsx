@@ -3,10 +3,11 @@
 import { AlertTriangle, Loader2, Send, ShieldCheck } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { CUSTO_USD } from '@/lib/campanhas-info'
 import { cn } from '@/lib/utils'
 import { Filtro } from '../../ui'
 
-type Modelo = { nome: string; idioma: string; categoria: string; texto: string; variaveis: number; suportado: boolean }
+type Modelo = { nome: string; idioma: string; categoria: string; texto: string; textoCompleto?: string; variaveis: number; suportado: boolean }
 type Variavel = { tipo: 'nome' | 'fixo'; valor?: string }
 type Filtros = {
   situacao: string
@@ -24,8 +25,6 @@ type Filtros = {
 
 const LIMITES_RAPIDOS = [25, 50, 100, 250]
 
-/** Custo aproximado por mensagem entregue no Brasil (confira a tabela oficial da Meta). */
-const CUSTO_USD: Record<string, number> = { MARKETING: 0.0625, UTILITY: 0.0068, AUTHENTICATION: 0.0068 }
 
 function Etapa({ n, titulo, children }: { n: number; titulo: string; children: React.ReactNode }) {
   return (
@@ -106,7 +105,7 @@ export function NovaCampanha({ etiquetas, nomeAdmin }: { etiquetas: string[]; no
   }, [modelo?.nome, modelo?.idioma, modelo?.variaveis])
 
   const previa = modelo
-    ? modelo.texto.replace(/\{\{(\d+)\}\}/g, (_, n) => {
+    ? (modelo.textoCompleto ?? modelo.texto).replace(/\{\{(\d+)\}\}/g, (_, n) => {
         const v = variaveis[Number(n) - 1]
         return v?.tipo === 'fixo' ? v.valor || `{{${n}}}` : 'Maria'
       })

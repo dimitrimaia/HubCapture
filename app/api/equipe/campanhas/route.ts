@@ -37,7 +37,8 @@ export async function POST(request: Request) {
     modelo: modelo.nome,
     idioma: modelo.idioma,
     categoria: modelo.categoria,
-    textoModelo: modelo.texto,
+    // Guarda também rodapé e botões (o link aparece no histórico do Atendimento).
+    textoModelo: modelo.textoCompleto,
     variaveis,
     filtros: limparFiltros(body.filtros),
     por: sessao.nome,

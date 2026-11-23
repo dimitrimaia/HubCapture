@@ -216,3 +216,11 @@ ALTER TABLE "campanha_envios" ADD CONSTRAINT "campanha_envios_lead_id_leads_id_f
 CREATE INDEX "campanha_envios_status_idx" ON "campanha_envios" USING btree ("campanha_id","status");
 CREATE INDEX "campanha_envios_wamid_idx" ON "campanha_envios" USING btree ("wamid");ALTER TABLE "campanhas" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "campanha_envios" ENABLE ROW LEVEL SECURITY;
+
+-- Vistos do WhatsApp (enviada, entregue, lida) das mensagens do Atendimento.
+CREATE TABLE IF NOT EXISTS "whatsapp_status" (
+	"wamid" text PRIMARY KEY NOT NULL,
+	"status" text NOT NULL,
+	"erro" text,
+	"atualizado_em" timestamp with time zone DEFAULT now() NOT NULL
+);

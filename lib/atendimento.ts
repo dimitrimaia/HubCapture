@@ -74,7 +74,7 @@ async function acharLead(dados: { whatsapp?: string; leadId?: string }) {
  * Mensagem que a pessoa mandou: cria ou reabre a conversa e guarda a mensagem.
  * Devolve a conversa já atualizada (o status diz se o assistente deve responder).
  */
-export async function registrarDoCliente(dados: { canal: Canal; contato: string; texto: string; nome?: string; whatsapp?: string; leadId?: string }) {
+export async function registrarDoCliente(dados: { canal: Canal; contato: string; texto: string; nome?: string; whatsapp?: string; leadId?: string; chave?: string }) {
   const db = getDb()
   if (!db) return null
   const lead = await acharLead({ whatsapp: dados.whatsapp ?? (dados.canal === 'whatsapp' ? dados.contato : undefined), leadId: dados.leadId })
@@ -107,7 +107,11 @@ export async function registrarDoCliente(dados: { canal: Canal; contato: string;
       },
     })
     .returning()
-  await db.insert(mensagensAtendimento).values({ atendimentoId: atendimento.id, autor: 'cliente', texto: dados.texto.slice(0, 4000) })
+  // chave "midia:<tipo>:<id>" guarda a foto/áudio recebido para o painel buscar na Meta.
+  await db
+    .insert(mensagensAtendimento)
+    .values({ atendimentoId: atendimento.id, autor: 'cliente', texto: dados.texto.slice(0, 4000), chave: dados.chave ?? null })
+    .onConflictDoNothing()
   return atendimento
 }
 
@@ -206,7 +210,8 @@ export async function conversaCompleta(id: string, { marcarLida = false } = {}) 
     .orderBy(desc(mensagensAtendimento.criadoEm))
     .limit(500)
   if (marcarLida && atendimento.naoLidas > 0) await db.update(atendimentos).set({ naoLidas: 0 }).where(eq(atendimentos.id, id))
-  return { atendimento, mensagens: mensagens.reverse() }
+  const vistos = await vistosDe(mensagens.map((m) => m.wamid).filter((w): w is string => Boolean(w)))
+  return { atendimento, mensagens: mensagens.reverse(), vistos }
 }
 
 /** Mensagens novas para o chat do site (o visitante só vê respostas da equipe e avisos). */
@@ -314,4 +319,34 @@ export async function registrarEnvioCampanha(dados: { telefone: string; nome?: s
   await db
     .insert(mensagensAtendimento)
     .values({ atendimentoId: atendimento.id, autor: 'atendente', autorNome: `Campanha · ${dados.campanha}`, texto: dados.texto.slice(0, 4000), wamid: dados.wamid ?? null })
+}
+
+/** A mídia pertence a uma mensagem guardada? (o painel só baixa o que chegou de verdade) */
+export async function midiaConhecida(mediaId: string) {
+  const db = getDb()
+  if (!db) return false
+  const [linha] = await db
+    .select({ id: mensagensAtendimento.id })
+    .from(mensagensAtendimento)
+    .where(sql`${mensagensAtendimento.chave} like ${'midia:%:' + mediaId}`)
+    .limit(1)
+  return Boolean(linha)
+}
+
+/** Status no WhatsApp (enviado, entregue, lido, falhou) de cada mensagem enviada, pelo wamid. */
+async function vistosDe(wamids: string[]): Promise<Record<string, { status: string; erro: string | null }>> {
+  const db = getDb()
+  const vistos: Record<string, { status: string; erro: string | null }> = {}
+  if (!db || wamids.length === 0) return vistos
+  const lista = sql.join(wamids.map((w) => sql`${w}`), sql`, `)
+  // Campanhas: já guardam o status no próprio envio.
+  const campanha = await db
+    .execute<{ wamid: string; status: string; erro: string | null }>(sql`select wamid, status, erro from campanha_envios where wamid in (${lista})`)
+    .catch(() => [])
+  // Demais mensagens (atualização 6). Sem a tabela, fica só com o das campanhas.
+  const outras = await db
+    .execute<{ wamid: string; status: string; erro: string | null }>(sql`select wamid, status, erro from whatsapp_status where wamid in (${lista})`)
+    .catch(() => [])
+  for (const v of [...campanha, ...outras]) vistos[v.wamid] = { status: v.status, erro: v.erro }
+  return vistos
 }
