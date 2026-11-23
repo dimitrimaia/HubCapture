@@ -60,6 +60,7 @@ function conhecimento(faqs: Pergunta[], tutorialSteps: TutorialStep[]) {
   const passos = tutorialSteps.map((passo, i) => `${i + 1}. ${passo.title}: ${passo.description}`).join('\n')
   return `## Perguntas frequentes\n${perguntas}\n\n## Tutorial passo a passo\n${passos}\n\n## Links oficiais
 - Cadastro com o código ${REFERRAL_CODE} (já aplicado): ${SIGNUP_URL}
+- Bot oficial de suporte da Hub no Telegram (reportar problemas): https://t.me/Hub_Report_Bot
 - Site Hub Capture (guias, tutoriais e perguntas frequentes): https://hubcapture.app
 - App Hub Capture no Google Play (Android): ${PLAY_STORE_URL}
 - App Hub Capture na App Store (iPhone): ${APP_STORE_URL}
@@ -88,6 +89,13 @@ Regras obrigatórias:
 5. NUNCA peça senha, código de verificação, dados bancários, chave PIX, documentos ou dados pessoais. Se a pessoa oferecer, diga para não compartilhar.
 6. Fora do assunto (Hub Capture, Hub Data, Minute, cadastro, gravações, pagamentos, kit/HubCap, comunidade), recuse com gentileza e volte ao tema.
 7. Não invente links: use apenas os da lista de links oficiais.
+8. Problemas técnicos (app travando, "não vinculado", código que não entra, botão "Entrando…" que volta para "Entrar", erro de login, gravação que não sobe): NUNCA deixe a pessoa sem resposta. Passe os procedimentos padrão, numerados e curtos:
+   1) conferir se está usando a MESMA conta (mesmo e-mail) no app Minute e no Hub;
+   2) apagar o app Minute, instalar de novo pela loja oficial, entrar e tentar vincular com o código outra vez;
+   3) atualizar o app Hub Capture e reiniciar o celular;
+   4) trocar a conexão (Wi-Fi ↔ dados móveis) e tentar de novo.
+   Se não resolver, peça para reportar no bot oficial de suporte da Hub no Telegram (https://t.me/Hub_Report_Bot), mandando print do erro, o e-mail da conta e o código de referência. Explique que esse site é de divulgação e não tem acesso às contas, então quem resolve é o suporte oficial da Hub.
+9. Se a pessoa mandar uma imagem (print), descreva em uma frase o que você vê de relevante (erro, tela, status) e responda com base nisso. Nunca repita dados pessoais que aparecerem no print (e-mail, documento, telefone).
 
 ## Conhecimento
 ${conhecimento(base.faqs, base.passos)}`
@@ -129,7 +137,16 @@ function chaveCache(historico: MensagemChat[], canal: Canal) {
 }
 
 /** Gera a resposta do assistente. Lança AssistenteIndisponivel sem chave ou se o Gemini falhar. */
-export async function gerarResposta(historico: MensagemChat[], canal: Canal): Promise<string> {
+/** Imagem que acompanha a última mensagem da pessoa (print de erro, tela do app…). */
+export type ImagemAnexa = { mime: string; base64: string }
+
+export async function gerarResposta(historico: MensagemChat[], canal: Canal, imagem?: ImagemAnexa): Promise<string> {
+  // Com imagem, sempre pergunta ao Gemini (resposta pronta e cache olham só o texto).
+  if (imagem) {
+    const resultado = await chamarGemini(historico, canal, imagem)
+    if (!resultado.ok) throw new AssistenteIndisponivel(`Gemini falhou com imagem (${resultado.erro})`)
+    return resultado.texto
+  }
   if (historico.length === 1 && historico[0].role === 'user') {
     const pronta = respostaPronta(historico[0].content, await obterConfig('respostas_prontas'), await obterConfig('tutoriais'))
     if (pronta) return pronta
@@ -165,7 +182,7 @@ type Resultado =
 const TIMEOUT_POR_MODELO_MS = 12000
 const PRAZO_TOTAL_MS = 40000
 
-async function chamarGemini(historico: MensagemChat[], canal: Canal): Promise<Resultado> {
+async function chamarGemini(historico: MensagemChat[], canal: Canal, imagem?: ImagemAnexa): Promise<Resultado> {
   const tentativas: Tentativa[] = []
   const nome = variavelDaChave()
   if (!nome) return { ok: false, modelo: null, erro: 'Nenhuma chave configurada (GEMINI_API_KEY) nesta implantação.', tentativas }
@@ -176,9 +193,13 @@ async function chamarGemini(historico: MensagemChat[], canal: Canal): Promise<Re
   const [faqs, passos] = await Promise.all([obterConfig('faq'), obterConfig('tutoriais')])
   const corpoBase = {
     systemInstruction: { parts: [{ text: instrucoes(canal, { faqs, passos }) }] },
-    contents: historico.map((mensagem) => ({
+    contents: historico.map((mensagem, i) => ({
       role: mensagem.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: mensagem.content }],
+      // A imagem vai junto da última mensagem da pessoa (o Gemini lê prints e fotos).
+      parts:
+        imagem && i === historico.length - 1 && mensagem.role === 'user'
+          ? [{ inlineData: { mimeType: imagem.mime, data: imagem.base64 } }, { text: mensagem.content }]
+          : [{ text: mensagem.content }],
     })),
   }
   // Raciocínio "low" deixa os modelos 3.x bem mais rápidos. Se o modelo recusar o campo, repete sem ele.
