@@ -19,12 +19,24 @@ import { carregarConversa, salvarConversa } from './whatsapp-memoria'
  */
 
 export type FiltrosPublico = {
-  situacao?: 'todos' | 'nao-convertidos' | 'nunca-chamados' | 'convertidos'
+  situacao?: 'todos' | 'nao-convertidos' | 'convertidos'
+  /** Contato anterior da equipe (botão "Chamar no WhatsApp", Fila ou campanha). */
+  chamado?: 'qualquer' | 'nunca' | 'nao-recente' | 'ja-chamados'
+  /** Com chamado = 'nao-recente': ninguém chamado nos últimos N dias. */
+  chamadoDias?: number
   origem?: 'todas' | 'site' | 'planilha'
-  periodo?: 'todos' | '7d' | '30d' | '90d'
+  /** Data do cadastro, em dias civis de São Paulo. */
+  periodo?: 'todos' | 'hoje' | 'ontem' | '3d' | '7d' | '15d' | '30d' | '90d' | 'personalizado'
+  /** Com periodo = 'personalizado' ("AAAA-MM-DD", inclusive). */
+  de?: string
+  ate?: string
   etiqueta?: string
   /** Não manda para quem recebeu QUALQUER campanha nos últimos N dias (evita cansar o público). */
   semCampanhaDias?: number
+  /** Máximo de pessoas (0 = todas). */
+  limite?: number
+  /** Quem entra primeiro quando há limite. */
+  ordem?: 'recentes' | 'antigos'
 }
 
 export type Variavel = { tipo: 'nome' | 'fixo'; valor?: string }
@@ -32,35 +44,73 @@ export type Variavel = { tipo: 'nome' | 'fixo'; valor?: string }
 export const LIMITE_DIARIO = Math.max(1, Number(process.env.WHATSAPP_LIMITE_DIARIO) || 250)
 const LOTE = 40
 
+const DATA = /^\d{4}-\d{2}-\d{2}$/
+export const DIAS_PERIODO = { '3d': 3, '7d': 7, '15d': 15, '30d': 30, '90d': 90 } as const
+export const LIMITE_MAXIMO = 10000
+
 export function limparFiltros(entrada: unknown): FiltrosPublico {
   const f = (entrada && typeof entrada === 'object' ? entrada : {}) as Record<string, unknown>
   const um = <T extends string>(v: unknown, opcoes: readonly T[], padrao: T) => ((opcoes as readonly unknown[]).includes(v) ? (v as T) : padrao)
   const dias = Number(f.semCampanhaDias)
+  const diasChamado = Number(f.chamadoDias)
+  const limite = Math.floor(Number(f.limite))
+  const data = (v: unknown) => (typeof v === 'string' && DATA.test(v) ? v : '')
+  // Campanhas antigas guardavam "nunca chamados" na situação.
+  const antigoNunca = f.situacao === 'nunca-chamados'
+  let de = data(f.de)
+  let ate = data(f.ate)
+  if (de && ate && de > ate) [de, ate] = [ate, de]
+  const periodo = um(f.periodo, ['todos', 'hoje', 'ontem', '3d', '7d', '15d', '30d', '90d', 'personalizado'] as const, 'todos')
   return {
-    situacao: um(f.situacao, ['todos', 'nao-convertidos', 'nunca-chamados', 'convertidos'] as const, 'nao-convertidos'),
+    situacao: antigoNunca ? 'nao-convertidos' : um(f.situacao, ['todos', 'nao-convertidos', 'convertidos'] as const, 'nao-convertidos'),
+    chamado: antigoNunca ? 'nunca' : um(f.chamado, ['qualquer', 'nunca', 'nao-recente', 'ja-chamados'] as const, 'qualquer'),
+    chamadoDias: [1, 3, 7, 15, 30, 60].includes(diasChamado) ? diasChamado : 7,
     origem: um(f.origem, ['todas', 'site', 'planilha'] as const, 'todas'),
-    periodo: um(f.periodo, ['todos', '7d', '30d', '90d'] as const, 'todos'),
+    periodo: periodo === 'personalizado' && !de && !ate ? 'todos' : periodo,
+    de: periodo === 'personalizado' ? de : '',
+    ate: periodo === 'personalizado' ? ate : '',
     etiqueta: typeof f.etiqueta === 'string' ? f.etiqueta.slice(0, 30) : '',
     semCampanhaDias: [0, 3, 7, 15, 30].includes(dias) ? dias : 7,
+    limite: limite > 0 ? Math.min(limite, LIMITE_MAXIMO) : 0,
+    ordem: um(f.ordem, ['recentes', 'antigos'] as const, 'recentes'),
   }
 }
 
 function condicoesPublico(f: FiltrosPublico) {
   const c = [eq(leads.consentimentoWhatsapp, true), isNull(leads.optOutEm), isNull(leads.numeroInvalidoEm)]
   if (f.situacao === 'nao-convertidos') c.push(isNull(leads.convertidoEm))
-  if (f.situacao === 'nunca-chamados') c.push(isNull(leads.convertidoEm), isNull(leads.chamadoEm))
   if (f.situacao === 'convertidos') c.push(sql`${leads.convertidoEm} is not null`)
+  if (f.chamado === 'nunca') c.push(isNull(leads.chamadoEm))
+  if (f.chamado === 'ja-chamados') c.push(sql`${leads.chamadoEm} is not null`)
+  if (f.chamado === 'nao-recente') {
+    c.push(sql`(${leads.chamadoEm} is null or ${leads.chamadoEm} < now() - make_interval(days => ${f.chamadoDias ?? 7}))`)
+  }
   if (f.origem && f.origem !== 'todas') c.push(eq(leads.origem, f.origem))
-  if (f.periodo && f.periodo !== 'todos') c.push(sql.raw(`leads.criado_em >= now() - interval '${parseInt(f.periodo)} days'`))
+  // Dia civil do cadastro em São Paulo (o banco guarda em UTC).
+  const dia = sql`(${leads.criadoEm} at time zone 'America/Sao_Paulo')::date`
+  const hoje = sql`(now() at time zone 'America/Sao_Paulo')::date`
+  if (f.periodo === 'hoje') c.push(sql`${dia} = ${hoje}`)
+  if (f.periodo === 'ontem') c.push(sql`${dia} = ${hoje} - 1`)
+  if (f.periodo && f.periodo in DIAS_PERIODO) {
+    // "Últimos 7 dias" = hoje e os 6 dias antes.
+    c.push(sql`${dia} > ${hoje} - ${DIAS_PERIODO[f.periodo as keyof typeof DIAS_PERIODO]}::int`)
+  }
+  if (f.periodo === 'personalizado') {
+    if (f.de) c.push(sql`${dia} >= ${f.de}::date`)
+    if (f.ate) c.push(sql`${dia} <= ${f.ate}::date`)
+  }
   if (f.etiqueta) c.push(sql`${f.etiqueta} = any(${leads.etiquetas})`)
   if (f.semCampanhaDias) {
     c.push(
-      sql.raw(
-        `not exists (select 1 from campanha_envios e where e.telefone = leads.whatsapp and e.enviado_em > now() - interval '${f.semCampanhaDias} days')`,
-      ),
+      sql`not exists (select 1 from campanha_envios e where e.telefone = leads.whatsapp and e.enviado_em > now() - make_interval(days => ${f.semCampanhaDias}))`,
     )
   }
   return and(...c)
+}
+
+/** Ordem de prioridade quando há limite (mais recentes ou mais antigos primeiro). */
+function ordemPublico(f: FiltrosPublico) {
+  return f.ordem === 'antigos' ? sql`criado_em asc, id` : sql`criado_em desc, id`
 }
 
 /** Quantas pessoas a campanha atinge, e quantas no total aceitaram mensagens. */
@@ -69,12 +119,13 @@ export async function contarPublico(f: FiltrosPublico) {
   if (!db) return null
   const [linha] = await db
     .select({
-      publico: sql<number>`count(*) filter (where ${condicoesPublico(f)})::int`,
+      encontrados: sql<number>`count(distinct ${leads.whatsapp}) filter (where ${condicoesPublico(f)})::int`,
       consentiram: sql<number>`count(*) filter (where ${leads.consentimentoWhatsapp} and ${leads.optOutEm} is null)::int`,
       total: sql<number>`count(*)::int`,
     })
     .from(leads)
-  return linha
+  if (!linha) return linha
+  return { ...linha, publico: f.limite ? Math.min(linha.encontrados, f.limite) : linha.encontrados }
 }
 
 export async function criarCampanha(dados: { nome: string; modelo: string; idioma: string; categoria: string; textoModelo: string; variaveis: Variavel[]; filtros: FiltrosPublico; por: string }) {
@@ -115,7 +166,14 @@ export async function iniciarCampanha(id: string) {
   const filtros = limparFiltros(campanha.filtros)
   await db.execute(sql`
     insert into campanha_envios (campanha_id, lead_id, telefone, nome)
-    select ${id}, id, whatsapp, nome from leads where ${condicoesPublico(filtros)}
+    select ${id}, id, whatsapp, nome from (
+      -- Um envio por número (cadastros repetidos com o mesmo WhatsApp contam uma vez).
+      select distinct on (whatsapp) id, whatsapp, nome, criado_em from leads
+      where ${condicoesPublico(filtros)}
+      order by whatsapp, criado_em desc
+    ) unicos
+    order by ${ordemPublico(filtros)}
+    ${filtros.limite ? sql`limit ${filtros.limite}` : sql``}
     on conflict (campanha_id, telefone) do nothing`)
   const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(campanhaEnvios).where(eq(campanhaEnvios.campanhaId, id))
   const [atualizada] = await db

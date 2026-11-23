@@ -8,7 +8,21 @@ import { Filtro } from '../../ui'
 
 type Modelo = { nome: string; idioma: string; categoria: string; texto: string; variaveis: number; suportado: boolean }
 type Variavel = { tipo: 'nome' | 'fixo'; valor?: string }
-type Filtros = { situacao: string; origem: string; periodo: string; etiqueta: string; semCampanhaDias: number }
+type Filtros = {
+  situacao: string
+  chamado: string
+  chamadoDias: number
+  origem: string
+  periodo: string
+  de: string
+  ate: string
+  etiqueta: string
+  semCampanhaDias: number
+  limite: number
+  ordem: string
+}
+
+const LIMITES_RAPIDOS = [25, 50, 100, 250]
 
 /** Custo aproximado por mensagem entregue no Brasil (confira a tabela oficial da Meta). */
 const CUSTO_USD: Record<string, number> = { MARKETING: 0.0625, UTILITY: 0.0068, AUTHENTICATION: 0.0068 }
@@ -25,6 +39,22 @@ function Etapa({ n, titulo, children }: { n: number; titulo: string; children: R
   )
 }
 
+function Chip({ ativo, onClick, children }: { ativo: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={ativo}
+      onClick={onClick}
+      className={cn(
+        'h-8 rounded-full border px-3 text-sm transition-colors',
+        ativo ? 'border-primary bg-primary text-primary-foreground' : 'border-border text-muted-foreground hover:bg-foreground/5 hover:text-foreground',
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
 const campo = 'h-10 w-full rounded-lg border border-input bg-background/60 px-3 text-sm outline-none focus-visible:border-primary'
 
 export function NovaCampanha({ etiquetas, nomeAdmin }: { etiquetas: string[]; nomeAdmin: string }) {
@@ -34,8 +64,20 @@ export function NovaCampanha({ etiquetas, nomeAdmin }: { etiquetas: string[]; no
   const [escolhido, setEscolhido] = useState('')
   const [nome, setNome] = useState('')
   const [variaveis, setVariaveis] = useState<Variavel[]>([])
-  const [filtros, setFiltros] = useState<Filtros>({ situacao: 'nao-convertidos', origem: 'todas', periodo: 'todos', etiqueta: '', semCampanhaDias: 7 })
-  const [publico, setPublico] = useState<{ publico: number; consentiram: number; total: number } | null>(null)
+  const [filtros, setFiltros] = useState<Filtros>({
+    situacao: 'nao-convertidos',
+    chamado: 'nunca',
+    chamadoDias: 7,
+    origem: 'todas',
+    periodo: '7d',
+    de: '',
+    ate: '',
+    etiqueta: '',
+    semCampanhaDias: 7,
+    limite: 50,
+    ordem: 'recentes',
+  })
+  const [publico, setPublico] = useState<{ publico: number; encontrados: number; consentiram: number; total: number } | null>(null)
   const [telefoneTeste, setTelefoneTeste] = useState('')
   const [aviso, setAviso] = useState<{ ok: boolean; texto: string } | null>(null)
   const [ocupado, setOcupado] = useState(false)
@@ -57,6 +99,7 @@ export function NovaCampanha({ etiquetas, nomeAdmin }: { etiquetas: string[]; no
     return () => clearTimeout(espera)
   }, [filtros])
 
+  const mudar = (parte: Partial<Filtros>) => setFiltros((f) => ({ ...f, ...parte }))
   const modelo = modelos?.find((m) => `${m.nome}|${m.idioma}` === escolhido)
   useEffect(() => {
     setVariaveis(Array.from({ length: modelo?.variaveis ?? 0 }, (_, i) => (i === 0 ? { tipo: 'nome' } : { tipo: 'fixo', valor: '' })))
@@ -174,22 +217,10 @@ export function NovaCampanha({ etiquetas, nomeAdmin }: { etiquetas: string[]; no
               valor={filtros.situacao}
               opcoes={[
                 { valor: 'nao-convertidos', rotulo: 'Ainda não converteram' },
-                { valor: 'nunca-chamados', rotulo: 'Nunca chamados' },
                 { valor: 'convertidos', rotulo: 'Convertidos' },
                 { valor: 'todos', rotulo: 'Todos' },
               ]}
-              onChange={(v) => setFiltros((f) => ({ ...f, situacao: v }))}
-            />
-            <Filtro
-              rotulo="Cadastro"
-              valor={filtros.periodo}
-              opcoes={[
-                { valor: 'todos', rotulo: 'Qualquer data' },
-                { valor: '7d', rotulo: 'Últimos 7 dias' },
-                { valor: '30d', rotulo: 'Últimos 30 dias' },
-                { valor: '90d', rotulo: 'Últimos 90 dias' },
-              ]}
-              onChange={(v) => setFiltros((f) => ({ ...f, periodo: v }))}
+              onChange={(v) => mudar({ situacao: v })}
             />
             <Filtro
               rotulo="Origem"
@@ -199,28 +230,126 @@ export function NovaCampanha({ etiquetas, nomeAdmin }: { etiquetas: string[]; no
                 { valor: 'site', rotulo: 'Site' },
                 { valor: 'planilha', rotulo: 'Planilha' },
               ]}
-              onChange={(v) => setFiltros((f) => ({ ...f, origem: v }))}
+              onChange={(v) => mudar({ origem: v })}
             />
+          </div>
+
+          <fieldset className="flex flex-col gap-2 rounded-xl border border-border p-3">
+            <legend className="px-1 text-xs font-medium">Já chamados pela equipe</legend>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { valor: 'nunca', rotulo: 'Nunca chamados' },
+                { valor: 'nao-recente', rotulo: 'Não chamados recentemente' },
+                { valor: 'ja-chamados', rotulo: 'Só quem já foi chamado' },
+                { valor: 'qualquer', rotulo: 'Tanto faz' },
+              ].map((o) => (
+                <Chip key={o.valor} ativo={filtros.chamado === o.valor} onClick={() => mudar({ chamado: o.valor })}>
+                  {o.rotulo}
+                </Chip>
+              ))}
+            </div>
+            {filtros.chamado === 'nao-recente' && (
+              <Filtro
+                rotulo="Sem contato há pelo menos"
+                valor={String(filtros.chamadoDias)}
+                opcoes={[1, 3, 7, 15, 30, 60].map((d) => ({ valor: String(d), rotulo: d === 1 ? '1 dia' : `${d} dias` }))}
+                onChange={(v) => mudar({ chamadoDias: Number(v) })}
+              />
+            )}
+            <p className="text-[11px] text-muted-foreground">Conta o botão “Chamar no WhatsApp”, a Fila e campanhas anteriores.</p>
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2 rounded-xl border border-border p-3">
+            <legend className="px-1 text-xs font-medium">Data do cadastro</legend>
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { valor: 'hoje', rotulo: 'Hoje' },
+                { valor: 'ontem', rotulo: 'Ontem' },
+                { valor: '3d', rotulo: '3 dias' },
+                { valor: '7d', rotulo: '7 dias' },
+                { valor: '15d', rotulo: '15 dias' },
+                { valor: '30d', rotulo: '30 dias' },
+                { valor: '90d', rotulo: '90 dias' },
+                { valor: 'todos', rotulo: 'Qualquer data' },
+                { valor: 'personalizado', rotulo: 'Escolher datas' },
+              ].map((o) => (
+                <Chip key={o.valor} ativo={filtros.periodo === o.valor} onClick={() => mudar({ periodo: o.valor })}>
+                  {o.rotulo}
+                </Chip>
+              ))}
+            </div>
+            {filtros.periodo === 'personalizado' && (
+              <div className="grid grid-cols-2 gap-2">
+                <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                  De
+                  <input type="date" className={campo} value={filtros.de} max={filtros.ate || undefined} onChange={(e) => mudar({ de: e.target.value })} />
+                </label>
+                <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                  Até
+                  <input type="date" className={campo} value={filtros.ate} min={filtros.de || undefined} onChange={(e) => mudar({ ate: e.target.value })} />
+                </label>
+              </div>
+            )}
+          </fieldset>
+
+          <fieldset className="flex flex-col gap-2 rounded-xl border border-border p-3">
+            <legend className="px-1 text-xs font-medium">Quantas pessoas</legend>
+            <div className="flex flex-wrap items-center gap-1.5">
+              {LIMITES_RAPIDOS.map((n) => (
+                <Chip key={n} ativo={filtros.limite === n} onClick={() => mudar({ limite: n })}>
+                  {n}
+                </Chip>
+              ))}
+              <Chip ativo={filtros.limite === 0} onClick={() => mudar({ limite: 0 })}>
+                Todas
+              </Chip>
+              <input
+                type="number"
+                min={1}
+                max={10000}
+                inputMode="numeric"
+                aria-label="Outro número"
+                placeholder="Outro"
+                className="h-8 w-24 rounded-full border border-input bg-background/60 px-3 text-sm outline-none focus-visible:border-primary"
+                value={filtros.limite && !LIMITES_RAPIDOS.includes(filtros.limite) ? filtros.limite : ''}
+                onChange={(e) => mudar({ limite: Math.max(0, Math.min(10000, Math.floor(Number(e.target.value) || 0))) })}
+              />
+            </div>
+            {filtros.limite > 0 && (
+              <Filtro
+                rotulo="Começar pelos"
+                valor={filtros.ordem}
+                opcoes={[
+                  { valor: 'recentes', rotulo: 'Cadastros mais recentes' },
+                  { valor: 'antigos', rotulo: 'Cadastros mais antigos' },
+                ]}
+                onChange={(v) => mudar({ ordem: v })}
+              />
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              Para mandar aos próximos depois, crie outra campanha: quem já recebeu fica de fora pela regra abaixo.
+            </p>
+          </fieldset>
+
+          <div className="grid gap-2 sm:grid-cols-2">
             <Filtro
               rotulo="Etiqueta"
               valor={filtros.etiqueta}
               opcoes={[{ valor: '', rotulo: 'Qualquer' }, ...etiquetas.map((e) => ({ valor: e, rotulo: e }))]}
-              onChange={(v) => setFiltros((f) => ({ ...f, etiqueta: v }))}
+              onChange={(v) => mudar({ etiqueta: v })}
             />
-            <div className="sm:col-span-2">
-              <Filtro
-                rotulo="Não repetir para quem recebeu campanha nos últimos"
-                valor={String(filtros.semCampanhaDias)}
-                opcoes={[
-                  { valor: '0', rotulo: 'não pular' },
-                  { valor: '3', rotulo: '3 dias' },
-                  { valor: '7', rotulo: '7 dias' },
-                  { valor: '15', rotulo: '15 dias' },
-                  { valor: '30', rotulo: '30 dias' },
-                ]}
-                onChange={(v) => setFiltros((f) => ({ ...f, semCampanhaDias: Number(v) }))}
-              />
-            </div>
+            <Filtro
+              rotulo="Pular quem recebeu campanha há menos de"
+              valor={String(filtros.semCampanhaDias)}
+              opcoes={[
+                { valor: '0', rotulo: 'não pular' },
+                { valor: '3', rotulo: '3 dias' },
+                { valor: '7', rotulo: '7 dias' },
+                { valor: '15', rotulo: '15 dias' },
+                { valor: '30', rotulo: '30 dias' },
+              ]}
+              onChange={(v) => mudar({ semCampanhaDias: Number(v) })}
+            />
           </div>
         </Etapa>
       </div>
@@ -235,6 +364,9 @@ export function NovaCampanha({ etiquetas, nomeAdmin }: { etiquetas: string[]; no
             <div className="rounded-xl bg-foreground/[0.04] p-2.5">
               <dt className="text-xs text-muted-foreground">Vai receber</dt>
               <dd className="text-xl font-semibold">{publico?.publico ?? '…'}</dd>
+              {publico && publico.encontrados > publico.publico && (
+                <dd className="text-[11px] text-muted-foreground">de {publico.encontrados} encontrados</dd>
+              )}
             </div>
             <div className="rounded-xl bg-foreground/[0.04] p-2.5">
               <dt className="text-xs text-muted-foreground">Custo estimado</dt>
