@@ -120,6 +120,12 @@ export function SiteDrawer() {
               <p className="pt-2 text-center text-[11px] text-muted-foreground/70">
                 {`© ${new Date().getFullYear()} Hub Capture`}
               </p>
+              <p className="text-center text-[11px] leading-snug text-muted-foreground/80">
+                Este não é o site oficial da Hub. Site independente de divulgação do código VEMHUB. Site oficial:{' '}
+                <a href="https://hub.xyz" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+                  hub.xyz
+                </a>
+              </p>
             </div>
           </div>
         </Dialog.Popup>
