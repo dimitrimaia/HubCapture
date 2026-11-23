@@ -310,3 +310,57 @@ export async function salvarNotas(id: string, dados: { nota?: string; etiquetas?
   if (eventos.length) await db.insert(leadEventos).values(eventos)
   return lead
 }
+
+/**
+ * Possíveis duplicados: o mesmo celular salvo de jeitos diferentes (com e sem o 9 depois do DDD).
+ * A chave é DDI + DDD + os 8 últimos dígitos.
+ */
+export async function gruposDuplicados() {
+  const db = getDb()
+  if (!db) return null
+  const linhas = await db.execute<{
+    chave: string
+    id: string
+    nome: string
+    whatsapp: string
+    origem: string
+    criado_em: Date
+    convertido: boolean
+    chamadas: number
+    consentimento: boolean
+    invalido: boolean
+    campanhas: number
+    conversas: number
+  }>(sql`
+    with base as (
+      select l.*, case
+        when regexp_replace(l.whatsapp, '[^0-9]', '', 'g') ~ '^55[0-9]{10,11}$'
+          then substr(regexp_replace(l.whatsapp, '[^0-9]', '', 'g'), 1, 4) || right(regexp_replace(l.whatsapp, '[^0-9]', '', 'g'), 8)
+        else regexp_replace(l.whatsapp, '[^0-9]', '', 'g')
+      end as chave
+      from leads l
+    ), repetidas as (
+      select chave from base group by chave having count(*) > 1
+    )
+    select b.chave, b.id, b.nome, b.whatsapp, b.origem, b.criado_em,
+      b.convertido_em is not null as convertido, b.chamadas,
+      b.consentimento_whatsapp as consentimento,
+      (b.numero_invalido_em is not null or b.opt_out_em is not null) as invalido,
+      (select count(*)::int from campanha_envios e where e.lead_id = b.id) as campanhas,
+      (select count(*)::int from atendimentos a where a.lead_id = b.id) as conversas
+    from base b join repetidas r using (chave)
+    order by b.chave, b.criado_em
+    limit 2000`)
+  type Linha = (typeof linhas)[number]
+  const grupos = new Map<string, Linha[]>()
+  for (const l of linhas) grupos.set(l.chave, [...(grupos.get(l.chave) ?? []), l])
+  return [...grupos.values()]
+}
+
+/** Remove um cadastro (ex.: duplicado). O histórico do lead vai junto; campanhas e conversas ficam, sem o vínculo. */
+export async function excluirLead(id: string) {
+  const db = getDb()
+  if (!db || !/^[0-9a-f-]{36}$/i.test(id)) return null
+  const [removido] = await db.delete(leads).where(eq(leads.id, id)).returning({ id: leads.id, nome: leads.nome, whatsapp: leads.whatsapp })
+  return removido ?? null
+}

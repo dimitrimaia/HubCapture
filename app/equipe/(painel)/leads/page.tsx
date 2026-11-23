@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { obterConfig } from '@/lib/configuracoes'
 import { exigirSessaoPagina } from '@/lib/equipe'
 import { etiquetasEmUso, explicarErroBanco, lerFiltrosLeads, paginaLeads, resumoLeads } from '@/lib/leads'
@@ -48,7 +49,14 @@ export default async function LeadsPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight">Cadastros</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Cadastros</h1>
+        {sessao.papel === 'admin' && (
+          <Link href="/equipe/leads/duplicados" className="inline-flex h-9 items-center rounded-full border border-border px-3 text-sm hover:bg-foreground/5">
+            Ver duplicados
+          </Link>
+        )}
+      </div>
       <p className="mt-1 text-sm text-muted-foreground">
         Quem deixou nome e WhatsApp no site. Para chamar um por um, na ordem certa, use a <strong>Fila de chamadas</strong>.
       </p>

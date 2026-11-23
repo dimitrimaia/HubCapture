@@ -31,7 +31,14 @@ export type MensagemRecebida = {
   /** null quando não é texto (áudio, imagem, figurinha…). */
   texto: string | null
   tipo: string
+  /** Foto, áudio, vídeo, documento ou figurinha: id para baixar da Meta (vale ~30 dias). */
+  midia?: { id: string; mime: string; legenda?: string; arquivo?: string }
 }
+
+/** Tipos de mídia que guardamos para ver no painel. */
+export const TIPOS_MIDIA = ['image', 'audio', 'video', 'document', 'sticker'] as const
+
+type CorpoMidia = { id?: string; mime_type?: string; caption?: string; filename?: string }
 
 type Webhook = {
   object?: string
@@ -48,6 +55,11 @@ type Webhook = {
           text?: { body?: string }
           button?: { text?: string; payload?: string }
           interactive?: { button_reply?: { title?: string }; list_reply?: { title?: string; description?: string } }
+          image?: CorpoMidia
+          audio?: CorpoMidia
+          video?: CorpoMidia
+          document?: CorpoMidia
+          sticker?: CorpoMidia
         }[]
         statuses?: unknown[]
       }
@@ -77,12 +89,19 @@ export function lerMensagens(payload: unknown, phoneNumberId = process.env.WHATS
           const resposta = mensagem.interactive?.button_reply ?? mensagem.interactive?.list_reply
           texto = resposta?.title ?? null
         }
+        const corpo = (TIPOS_MIDIA as readonly string[]).includes(mensagem.type) ? mensagem[mensagem.type as (typeof TIPOS_MIDIA)[number]] : undefined
+        const midia =
+          corpo?.id && /^[A-Za-z0-9_-]{1,100}$/.test(corpo.id)
+            ? { id: corpo.id, mime: (corpo.mime_type ?? '').slice(0, 100), legenda: corpo.caption?.trim().slice(0, 1000) || undefined, arquivo: corpo.filename?.slice(0, 200) }
+            : undefined
         mensagens.push({
           id: mensagem.id,
           de: mensagem.from.replace(/\D/g, ''),
           nome: contato?.profile?.name,
-          texto: texto?.trim() || null,
+          // A legenda da foto/vídeo conta como texto (o assistente responde a ela).
+          texto: texto?.trim() || midia?.legenda || null,
           tipo: mensagem.type,
+          midia,
         })
       }
     }
@@ -184,6 +203,8 @@ export type ModeloMeta = {
   categoria: string
   /** Texto do corpo, com {{1}}, {{2}}… */
   texto: string
+  /** Corpo + rodapé + botões ("🔗 Concluir cadastro: https://…"), para o histórico e a prévia. */
+  textoCompleto: string
   variaveis: number
   /** Modelos com cabeçalho de mídia ou botões dinâmicos ainda não são suportados no disparo. */
   suportado: boolean
@@ -202,7 +223,7 @@ export async function listarModelosAprovados(): Promise<ModeloMeta[]> {
   const resposta = await fetch(url, { headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` }, cache: 'no-store', signal: AbortSignal.timeout(15000) })
   if (!resposta.ok) throw new Error(`WhatsApp API ${resposta.status}: ${(await resposta.text().catch(() => '')).slice(0, 300)}`)
   const dados = (await resposta.json()) as {
-    data?: { name: string; language: string; category: string; components?: { type: string; text?: string; format?: string; buttons?: { type: string; url?: string }[] }[] }[]
+    data?: { name: string; language: string; category: string; components?: { type: string; text?: string; format?: string; buttons?: { type: string; text?: string; url?: string; phone_number?: string }[] }[] }[]
   }
   return (dados.data ?? []).map((m) => {
     const corpo = m.components?.find((c) => c.type === 'BODY')?.text ?? ''
@@ -211,7 +232,10 @@ export async function listarModelosAprovados(): Promise<ModeloMeta[]> {
     const variaveis = new Set(corpo.match(/\{\{\d+\}\}/g) ?? []).size
     const cabecalhoVariavel = Boolean(cabecalho && (cabecalho.format !== 'TEXT' || /\{\{\d+\}\}/.test(cabecalho.text ?? '')))
     const botaoVariavel = botoes.some((b) => b.type === 'URL' && /\{\{\d+\}\}/.test(b.url ?? ''))
-    return { nome: m.name, idioma: m.language, categoria: m.category, texto: corpo, variaveis, suportado: !cabecalhoVariavel && !botaoVariavel }
+    const rodape = m.components?.find((c) => c.type === 'FOOTER')?.text ?? ''
+    const linhasBotoes = botoes.map((b) => (b.url ? `🔗 ${b.text ?? 'Link'}: ${b.url}` : b.phone_number ? `📞 ${b.text ?? 'Ligar'}: ${b.phone_number}` : `▫️ ${b.text ?? 'Botão'}`))
+    const textoCompleto = [corpo, rodape, linhasBotoes.join('\n')].filter(Boolean).join('\n\n')
+    return { nome: m.name, idioma: m.language, categoria: m.category, texto: corpo, textoCompleto, variaveis, suportado: !cabecalhoVariavel && !botaoVariavel }
   })
 }
 
@@ -236,4 +260,19 @@ export function lerStatuses(payload: unknown): StatusEntrega[] {
     }
   }
   return lista
+}
+
+/** Baixa uma mídia recebida (foto, áudio…) da Meta. A URL da Meta exige o token e expira em minutos. */
+export async function baixarMidia(mediaId: string) {
+  const token = process.env.WHATSAPP_TOKEN
+  const versao = process.env.WHATSAPP_API_VERSION || 'v23.0'
+  const base = process.env.WHATSAPP_API_BASE || 'https://graph.facebook.com'
+  if (!token || !/^[A-Za-z0-9_-]{1,100}$/.test(mediaId)) return null
+  const info = await fetch(`${base}/${versao}/${mediaId}`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+  if (!info.ok) return null
+  const { url, mime_type } = (await info.json().catch(() => ({}))) as { url?: string; mime_type?: string }
+  if (!url) return null
+  const arquivo = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' })
+  if (!arquivo.ok || !arquivo.body) return null
+  return { corpo: arquivo.body, tipo: mime_type ?? arquivo.headers.get('content-type') ?? 'application/octet-stream', tamanho: arquivo.headers.get('content-length') }
 }

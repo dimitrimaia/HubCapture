@@ -3,6 +3,13 @@ import { exigirSessaoApi } from '@/lib/equipe'
 import { formatE164 } from '@/lib/phone'
 
 /** Conversa completa. ?lida=1 zera as não lidas (quando a conversa está aberta na tela). */
+
+/** "midia:image:123" → { tipo: 'image', id: '123' } (só em mensagens de clientes). */
+function lerChaveMidia(chave: string | null) {
+  const partes = chave?.match(/^midia:([a-z]+):([A-Za-z0-9_-]+)$/)
+  return partes ? { tipo: partes[1], id: partes[2] } : null
+}
+
 export async function GET(request: Request, ctx: RouteContext<'/api/equipe/atendimento/[id]'>) {
   const sessao = await exigirSessaoApi(request)
   if (!sessao) return Response.json({ ok: false }, { status: 401 })
@@ -25,9 +32,11 @@ export async function GET(request: Request, ctx: RouteContext<'/api/equipe/atend
         leadId: a.leadId,
         criadoEm: a.criadoEm.toISOString(),
         janelaAberta: podeResponder(a),
+        // A pessoa nunca escreveu (ex.: só recebeu a campanha): não há janela para fechar.
+        clienteNuncaEscreveu: a.canal === 'whatsapp' && !a.ultimaDoClienteEm,
         janelaFechaEm: a.canal === 'whatsapp' && a.ultimaDoClienteEm ? new Date(a.ultimaDoClienteEm.getTime() + JANELA_WHATSAPP_MS).toISOString() : null,
       },
-      mensagens: dados.mensagens.map((m) => ({ id: m.id, autor: m.autor, autorNome: m.autorNome, texto: m.texto, erro: m.erro, em: m.criadoEm.toISOString() })),
+      mensagens: dados.mensagens.map((m) => ({ id: m.id, autor: m.autor, autorNome: m.autorNome, texto: m.texto, erro: m.erro ?? (m.wamid ? dados.vistos[m.wamid]?.erro : null) ?? null, em: m.criadoEm.toISOString(), midia: lerChaveMidia(m.chave), visto: m.wamid ? (dados.vistos[m.wamid]?.status ?? 'enviado') : null })),
     },
     { headers: { 'Cache-Control': 'no-store' } },
   )

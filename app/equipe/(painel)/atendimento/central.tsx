@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, ArrowLeft, Bot, CheckCheck, Globe, Hand, Headset, Loader2, RotateCcw, Search, SendHorizontal, UserRound } from 'lucide-react'
+import { AlertTriangle, ArrowLeft, Bot, Check, CheckCheck, Globe, Hand, Headset, Loader2, RotateCcw, Search, SendHorizontal, UserRound } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
 import { WhatsappIcon } from '@/components/landing/whatsapp-icon'
@@ -28,8 +28,58 @@ type Detalhe = Omit<Item, 'naoLidas' | 'ultimaMensagem' | 'ultimaMensagemEm' | '
   leadId: string | null
   criadoEm: string
   janelaFechaEm: string | null
+  clienteNuncaEscreveu?: boolean
 }
-type Mensagem = { id: string; autor: 'cliente' | 'bot' | 'atendente' | 'sistema'; autorNome: string | null; texto: string; erro: string | null; em: string }
+type Mensagem = {
+  id: string
+  autor: 'cliente' | 'bot' | 'atendente' | 'sistema'
+  autorNome: string | null
+  texto: string
+  erro: string | null
+  em: string
+  midia?: { tipo: string; id: string } | null
+  /** Status no WhatsApp das mensagens enviadas: enviado, entregue, lido, falhou. */
+  visto?: string | null
+}
+
+function Visto({ status, claro }: { status: string; claro: boolean }) {
+  if (status === 'falhou') return null
+  const rotulo = status === 'lido' ? 'Lida' : status === 'entregue' ? 'Entregue' : status === 'enviado' ? 'Enviada' : 'Enviando'
+  const Icone = status === 'entregue' || status === 'lido' ? CheckCheck : Check
+  return (
+    <span title={rotulo} aria-label={rotulo} className={cn('ml-1 inline-flex align-middle', status === 'lido' ? 'text-sky-400' : claro ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+      <Icone className="size-3.5" aria-hidden="true" />
+    </span>
+  )
+}
+
+/** Foto, figurinha, áudio, vídeo ou documento que o cliente mandou (baixado da Meta pelo painel). */
+function Midia({ midia }: { midia: { tipo: string; id: string } }) {
+  const src = `/api/equipe/atendimento/midia/${midia.id}`
+  const [falhou, setFalhou] = useState(false)
+  if (falhou) return <p className="text-xs text-muted-foreground">Não deu para carregar a mídia (a Meta guarda por cerca de 30 dias).</p>
+  if (midia.tipo === 'image' || midia.tipo === 'sticker') {
+    return (
+      <a href={src} target="_blank" rel="noopener noreferrer" className="mb-1 block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={midia.tipo === 'sticker' ? 'Figurinha enviada pelo cliente' : 'Imagem enviada pelo cliente'}
+          loading="lazy"
+          onError={() => setFalhou(true)}
+          className={cn('rounded-xl object-contain', midia.tipo === 'sticker' ? 'max-h-32' : 'max-h-72 w-full bg-black/20')}
+        />
+      </a>
+    )
+  }
+  if (midia.tipo === 'audio') return <audio controls preload="none" src={src} onError={() => setFalhou(true)} className="mb-1 h-10 w-64 max-w-full" />
+  if (midia.tipo === 'video') return <video controls preload="metadata" src={src} onError={() => setFalhou(true)} className="mb-1 max-h-72 w-full rounded-xl bg-black/20" />
+  return (
+    <a href={`${src}?baixar=1`} className="mb-1 inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs hover:bg-foreground/5">
+      Baixar documento
+    </a>
+  )
+}
 
 const ABAS = [
   { id: 'fila', rotulo: 'Na fila' },
@@ -119,7 +169,7 @@ export function CentralAtendimento({ modelos, atendente, inicial }: { modelos: M
       {/* Lista */}
       <section aria-label="Conversas" className={cn('flex min-h-0 flex-col border-border lg:border-r', aberta && 'max-lg:hidden')}>
         <div className="flex flex-col gap-2 border-b border-border p-3">
-          <nav aria-label="Filtro" className="-mx-1 flex gap-1 overflow-x-auto px-1 [scrollbar-width:none]">
+          <nav aria-label="Filtro" className="flex flex-wrap gap-1">
             {ABAS.map((a) => {
               const n = contagemDaAba(a.id, contagem)
               return (
@@ -368,8 +418,15 @@ function Conversa({ id, modelos, atendente, onVoltar }: { id: string; modelos: M
                     {m.autor === 'bot' ? 'Assistente' : (m.autorNome ?? 'Equipe')}
                   </p>
                 )}
-                <p className="break-words whitespace-pre-wrap">{m.texto}</p>
-                <p className={cn('mt-0.5 text-right text-[10px]', m.autor === 'atendente' ? 'text-primary-foreground/70' : 'text-muted-foreground')}>{dataCurta(m.em)}</p>
+                {m.midia && <Midia midia={m.midia} />}
+                {/* Sem legenda, "[imagem]" não diz nada a mais que a própria imagem. */}
+                {!(m.midia && /^\[[^\]]+\]$/.test(m.texto)) && (
+                  <p className="break-words whitespace-pre-wrap">{m.midia ? m.texto.replace(/^\[[^\]]+\]\s*/, '') : m.texto}</p>
+                )}
+                <p className={cn('mt-0.5 text-right text-[10px]', m.autor === 'atendente' ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                  {dataCurta(m.em)}
+                  {m.visto && m.autor !== 'cliente' && <Visto status={m.visto} claro={m.autor === 'atendente'} />}
+                </p>
                 {m.erro && (
                   <p className="mt-1 flex items-center gap-1 rounded-lg bg-destructive/90 px-2 py-1 text-[11px] text-white">
                     <AlertTriangle className="size-3 shrink-0" aria-hidden="true" /> Não entregue: {m.erro}
@@ -391,8 +448,17 @@ function Conversa({ id, modelos, atendente, onVoltar }: { id: string; modelos: M
         {bloqueada ? (
           <p className="flex items-start gap-2 rounded-xl border border-amber-500/35 bg-amber-500/10 p-2.5 text-xs">
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-amber-500" aria-hidden="true" />
-            Passaram 24 h desde a última mensagem desta pessoa. O WhatsApp só deixa a empresa escrever com modelo aprovado (pago). Use a Fila de chamadas
-            (seu WhatsApp) ou espere ela escrever de novo.
+            {detalhe.clienteNuncaEscreveu ? (
+              <span>
+                <strong>Esta pessoa ainda não respondeu.</strong> Pelo WhatsApp oficial, a empresa só pode escrever primeiro com modelo aprovado (pago). Quando ela
+                responder, o campo libera por 24 h. Se quiser falar antes, use a Fila de chamadas (seu WhatsApp).
+              </span>
+            ) : (
+              <span>
+                Passaram 24 h desde a última mensagem desta pessoa. O WhatsApp só deixa a empresa escrever com modelo aprovado (pago). Use a Fila de chamadas (seu
+                WhatsApp) ou espere ela escrever de novo.
+              </span>
+            )}
           </p>
         ) : (
           detalhe.janelaFechaEm && (
@@ -443,7 +509,7 @@ function Conversa({ id, modelos, atendente, onVoltar }: { id: string; modelos: M
               }
             }}
             rows={1}
-            placeholder={bloqueada ? 'Janela de 24 h fechada' : 'Escreva sua resposta…'}
+            placeholder={bloqueada ? (detalhe.clienteNuncaEscreveu ? 'Aguardando a pessoa responder' : 'Janela de 24 h fechada') : 'Escreva sua resposta…'}
             className="max-h-40 min-h-11 flex-1 resize-none rounded-2xl border border-input bg-background/60 px-4 py-2.5 text-sm leading-snug outline-none field-sizing-content focus-visible:border-primary disabled:opacity-50"
           />
           <button

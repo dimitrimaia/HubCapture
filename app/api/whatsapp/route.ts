@@ -63,8 +63,19 @@ export async function POST(request: Request) {
 
 /** Envia e guarda na central de atendimento o que o assistente respondeu. */
 async function responderComoBot(para: string, texto: string, atendimentoId: string | null) {
-  await enviarTexto(para, texto)
-  if (atendimentoId) await registrarMensagem(atendimentoId, 'bot', texto).catch(() => null)
+  const resposta = (await enviarTexto(para, texto)) as { messages?: { id?: string }[] } | undefined
+  // Guarda o wamid para mostrar os vistos (entregue/lida) no painel.
+  if (atendimentoId) await registrarMensagem(atendimentoId, 'bot', texto, { wamid: resposta?.messages?.[0]?.id }).catch(() => null)
+}
+
+const NOME_TIPO: Record<string, string> = { audio: 'áudio', image: 'imagem', video: 'vídeo', document: 'documento', sticker: 'figurinha' }
+
+/** O que aparece na conversa do painel: a legenda/texto, ou o tipo entre colchetes. */
+function textoParaPainel(mensagem: MensagemRecebida) {
+  const tipo = NOME_TIPO[mensagem.tipo] ?? mensagem.tipo
+  if (!mensagem.midia) return mensagem.texto ?? `[${tipo}]`
+  const extra = mensagem.midia.legenda ?? mensagem.midia.arquivo ?? ''
+  return extra ? `[${tipo}] ${extra}` : `[${tipo}]`
 }
 
 async function atender(mensagem: MensagemRecebida) {
@@ -81,7 +92,8 @@ async function atender(mensagem: MensagemRecebida) {
     canal: 'whatsapp',
     contato: mensagem.de,
     nome: mensagem.nome,
-    texto: mensagem.texto ?? `[${mensagem.tipo === 'audio' ? 'áudio' : mensagem.tipo === 'image' ? 'imagem' : mensagem.tipo}]`,
+    texto: textoParaPainel(mensagem),
+    chave: mensagem.midia ? `midia:${mensagem.tipo}:${mensagem.midia.id}` : undefined,
   }).catch(async (error) => {
     await registrarErro('atendimento', error)
     return null

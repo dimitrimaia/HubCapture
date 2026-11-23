@@ -1,12 +1,15 @@
 'use client'
 
-import { Loader2, Pause, Play, Rocket, X } from 'lucide-react'
+import { AlertTriangle, Ban, Loader2, Pause, Play, Rocket, X } from 'lucide-react'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { custoCampanha, explicarErro, formatarBrl, formatarUsd, ROTULO_ACAO, type AcaoFalha } from '@/lib/campanhas-info'
 import { formatE164 } from '@/lib/phone'
+import { cn } from '@/lib/utils'
 import { dataCurta, Selo } from '../../ui'
 
-type Envio = { telefone: string; nome: string | null; status: string; erro: string | null; enviadoEm: string | null }
+type Envio = { telefone: string; nome: string | null; status: string; erro: string | null; enviadoEm: string | null; leadId: string | null; invalido: boolean | null }
+type Falha = { erro: string | null; leadId: string | null; invalido: boolean | null }
 type Campanha = {
   id: string
   nome: string
@@ -22,6 +25,7 @@ type Campanha = {
   textoModelo: string | null
   variaveis: { tipo: 'nome' | 'fixo'; valor?: string }[]
   envios: Envio[]
+  falhasLista: Falha[]
 }
 
 const STATUS: Record<string, { rotulo: string; tom: 'neutro' | 'verde' | 'vermelho' | 'amarelo' }> = {
@@ -46,15 +50,17 @@ export function DetalheCampanha({ id }: { id: string }) {
   const [motivo, setMotivo] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState(false)
   const processando = useRef(false)
+  const [filtro, setFiltro] = useState<'todos' | 'falhas'>('todos')
+  const [aviso, setAviso] = useState<string | null>(null)
 
   const carregar = useCallback(async () => {
-    const r = await fetch(`/api/equipe/campanhas/${id}`, { cache: 'no-store' }).catch(() => null)
+    const r = await fetch(`/api/equipe/campanhas/${id}${filtro === 'falhas' ? '?filtro=falhas' : ''}`, { cache: 'no-store' }).catch(() => null)
     const d = await r?.json().catch(() => null)
     if (d?.ok) {
       setC(d.campanha)
       setLimite(d.limiteDiario)
     }
-  }, [id])
+  }, [id, filtro])
 
   useEffect(() => {
     carregar()
@@ -90,6 +96,19 @@ export function DetalheCampanha({ id }: { id: string }) {
     carregar()
   }
 
+  /** Tira os números das próximas campanhas e da Fila (marca como número inválido). */
+  async function invalidar(leadIds: string[]) {
+    const ids = [...new Set(leadIds)]
+    if (!ids.length) return
+    if (!window.confirm(`Tirar ${ids.length === 1 ? 'este número' : `${ids.length} números`} das próximas campanhas e da Fila? Dá para desfazer em Cadastros (filtro "Inválidos").`)) return
+    setOcupado(true)
+    const r = await fetch(`/api/equipe/campanhas/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'invalidar', leadIds: ids }) }).catch(() => null)
+    const d = await r?.json().catch(() => null)
+    setOcupado(false)
+    setAviso(d?.ok ? `${d.total} ${d.total === 1 ? 'número marcado' : 'números marcados'} como inválido.` : 'Não foi possível marcar agora.')
+    carregar()
+  }
+
   if (!c) {
     return (
       <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
@@ -98,6 +117,18 @@ export function DetalheCampanha({ id }: { id: string }) {
     )
   }
 
+  const custo = custoCampanha(c.categoria, c.entregues)
+  // Falhas agrupadas pelo motivo, com quem ainda pode ser tirado das próximas campanhas.
+  const motivos = Object.values(
+    c.falhasLista.reduce<Record<string, { titulo: string; detalhe: string; acao: AcaoFalha; codigo: string; total: number; pendentes: string[] }>>((acc, f) => {
+      const e = explicarErro(f.erro)
+      const chave = e.codigo || e.titulo
+      acc[chave] ??= { ...e, total: 0, pendentes: [] }
+      acc[chave].total++
+      if (f.leadId && !f.invalido) acc[chave].pendentes.push(f.leadId)
+      return acc
+    }, {}),
+  ).sort((a, b) => b.total - a.total)
   const feitos = c.enviados + c.falhas
   const progresso = c.total ? Math.round((feitos / c.total) * 100) : 0
   const cartoes = [
@@ -178,9 +209,73 @@ export function DetalheCampanha({ id }: { id: string }) {
         </div>
       )}
 
+      <section aria-label="Custo" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card/60 px-4 py-3">
+        <div>
+          <p className="text-xs text-muted-foreground">Gasto estimado (só mensagens entregues são cobradas)</p>
+          <p className="text-lg font-semibold tabular-nums">
+            {formatarUsd(custo.usd)} <span className="text-sm font-normal text-muted-foreground">≈ {formatarBrl(custo.brl)}</span>
+          </p>
+        </div>
+        <p className="max-w-md text-xs text-muted-foreground">
+          {c.entregues} entregues × {formatarUsd(custo.usd / Math.max(c.entregues, 1))} ({c.categoria?.toLowerCase()}). As {c.falhas} falhas não são cobradas. O valor exato aparece na fatura da Meta.
+        </p>
+      </section>
+
+      {motivos.length > 0 && (
+        <section aria-label="Falhas" className="rounded-2xl border border-border bg-card/60 p-4">
+          <h2 className="flex items-center gap-2 text-sm font-semibold">
+            <AlertTriangle className="size-4 text-destructive" aria-hidden="true" /> Por que falhou
+          </h2>
+          <ul className="mt-3 flex flex-col divide-y divide-border">
+            {motivos.map((m) => (
+              <li key={m.codigo || m.titulo} className="flex flex-wrap items-start justify-between gap-3 py-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">
+                    {m.total} × {m.titulo} {m.codigo && <span className="font-mono text-xs text-muted-foreground">({m.codigo})</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{m.detalhe}</p>
+                  <p className={cn('mt-0.5 text-[11px] font-medium', m.acao === 'invalidar' ? 'text-destructive' : 'text-muted-foreground')}>{ROTULO_ACAO[m.acao]}</p>
+                </div>
+                {m.acao === 'invalidar' && m.pendentes.length > 0 && (
+                  <button
+                    type="button"
+                    disabled={ocupado}
+                    onClick={() => invalidar(m.pendentes)}
+                    className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-destructive/40 px-3 text-xs text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                  >
+                    <Ban className="size-3.5" aria-hidden="true" /> Tirar {m.pendentes.length} das próximas
+                  </button>
+                )}
+                {m.acao === 'invalidar' && m.pendentes.length === 0 && <span className="text-xs text-muted-foreground">Já fora das próximas ✓</span>}
+              </li>
+            ))}
+          </ul>
+          {aviso && (
+            <p role="status" className="mt-2 text-xs text-primary">
+              {aviso}
+            </p>
+          )}
+        </section>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
         <section className="overflow-hidden rounded-2xl border border-border bg-card/60">
-          <h2 className="border-b border-border px-4 py-3 text-sm font-semibold">Envios recentes</h2>
+          <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-2.5">
+            <h2 className="text-sm font-semibold">{filtro === 'falhas' ? 'Só as falhas' : 'Envios recentes'}</h2>
+            <div className="flex gap-1" role="group" aria-label="Mostrar">
+              {(['todos', 'falhas'] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  aria-pressed={filtro === f}
+                  onClick={() => setFiltro(f)}
+                  className={cn('h-8 rounded-full px-3 text-xs', filtro === f ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-foreground/5')}
+                >
+                  {f === 'todos' ? 'Todos' : `Falhas (${c.falhas})`}
+                </button>
+              ))}
+            </div>
+          </div>
           {c.envios.length === 0 ? (
             <p className="p-4 text-sm text-muted-foreground">Os envios aparecem aqui quando o disparo começar.</p>
           ) : (
@@ -197,7 +292,20 @@ export function DetalheCampanha({ id }: { id: string }) {
                         <Selo tom={e.status === 'falhou' ? 'vermelho' : e.status === 'lido' || e.status === 'entregue' ? 'verde' : 'neutro'} titulo={e.erro ?? undefined}>
                           {STATUS_ENVIO[e.status] ?? e.status}
                         </Selo>
-                        {e.erro && <p className="mt-0.5 max-w-xs truncate text-[11px] text-destructive">{e.erro}</p>}
+                        {e.erro && (
+                          <p className="mt-0.5 max-w-xs text-[11px] text-destructive" title={e.erro}>
+                            {explicarErro(e.erro).titulo}
+                          </p>
+                        )}
+                        {e.status === 'falhou' && e.leadId && explicarErro(e.erro).acao === 'invalidar' && (
+                          e.invalido ? (
+                            <p className="text-[11px] text-muted-foreground">Fora das próximas ✓</p>
+                          ) : (
+                            <button type="button" disabled={ocupado} onClick={() => invalidar([e.leadId!])} className="text-[11px] text-destructive underline-offset-2 hover:underline">
+                              Tirar das próximas
+                            </button>
+                          )
+                        )}
                       </td>
                       <td className="px-4 py-2 text-right text-xs whitespace-nowrap text-muted-foreground">{dataCurta(e.enviadoEm)}</td>
                     </tr>
