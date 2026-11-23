@@ -7,7 +7,7 @@ import { variantesE164 } from '@/lib/phone'
 import { SIGNUP_URL, WHATSAPP_COMMUNITY_URL } from '@/lib/site'
 import { aplicarStatuses } from '@/lib/campanhas'
 import { marcarOptOut } from '@/lib/lembretes'
-import { assinaturaValida, enviarTexto, lerMensagens, lerStatuses, marcarComoLida, type MensagemRecebida, pediuParaSair, whatsappConfigurado } from '@/lib/whatsapp'
+import { assinaturaValida, baixarMidia, enviarTexto, lerMensagens, lerStatuses, marcarComoLida, type MensagemRecebida, pediuParaSair, whatsappConfigurado } from '@/lib/whatsapp'
 import { carregarConversa, mensagemNova, salvarConversa } from '@/lib/whatsapp-memoria'
 
 export const maxDuration = 60
@@ -78,6 +78,20 @@ function textoParaPainel(mensagem: MensagemRecebida) {
   return extra ? `[${tipo}] ${extra}` : `[${tipo}]`
 }
 
+/** Baixa a foto da Meta para a IA ler (até 4 MB, só imagens). null se não der: a conversa segue sem ela. */
+async function imagemParaIa(mediaId: string) {
+  try {
+    const arquivo = await baixarMidia(mediaId)
+    if (!arquivo || !/^image\/(jpeg|png|webp|heic|heif)$/.test(arquivo.tipo)) return null
+    const bytes = Buffer.from(await new Response(arquivo.corpo).arrayBuffer())
+    if (bytes.length === 0 || bytes.length > 4 * 1024 * 1024) return null
+    return { mime: arquivo.tipo, base64: bytes.toString('base64') }
+  } catch (error) {
+    console.warn('[whatsapp] imagem para a IA:', error)
+    return null
+  }
+}
+
 async function atender(mensagem: MensagemRecebida) {
   if (!(await mensagemNova(mensagem.id))) return // reenvio da Meta: já respondemos
   if (!whatsappConfigurado()) {
@@ -111,21 +125,26 @@ async function atender(mensagem: MensagemRecebida) {
 
   await marcarComoLida(mensagem.id).catch((error) => console.warn('[whatsapp] marcar como lida:', error))
 
-  if (!mensagem.texto) {
+  // Foto/print: a IA lê a imagem (Gemini). Áudio, vídeo e documento ainda não.
+  const imagem = mensagem.tipo === 'image' && mensagem.midia ? await imagemParaIa(mensagem.midia.id) : null
+  if (!mensagem.texto && !imagem) {
     await responderComoBot(mensagem.de, SO_TEXTO, id)
     return
   }
+  const textoDaPessoa = imagem
+    ? `[Enviou uma imagem] ${mensagem.texto ?? 'Sem texto. Veja o que a imagem mostra e ajude.'}`
+    : (mensagem.texto as string)
 
-  if (atendimento && pediuHumano(mensagem.texto)) {
+  if (atendimento && mensagem.texto && pediuHumano(mensagem.texto)) {
     await pedirHumano(atendimento.id)
     await responderComoBot(mensagem.de, AVISO_HUMANO, id)
     return
   }
 
-  const historico = limparHistorico([...(await carregarConversa(mensagem.de)), { role: 'user', content: mensagem.texto }])
+  const historico = limparHistorico([...(await carregarConversa(mensagem.de)), { role: 'user', content: textoDaPessoa }])
   let resposta: string
   try {
-    resposta = await gerarResposta(historico, 'whatsapp')
+    resposta = await gerarResposta(historico, 'whatsapp', imagem ?? undefined)
   } catch (error) {
     if (!(error instanceof AssistenteIndisponivel)) throw error
     console.error('[whatsapp] Assistente indisponível:', error.message)
